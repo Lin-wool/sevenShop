@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    # MySQL 数据库连接
+    url: jdbc:mysql://localhost:3306/sevenshop?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      schema-locations: classpath:schema.sql
+      mode: never
+
+  mail:
+    host: smtp.163.com
+    port: 25
+    username: lgxwool@163.com
+    password: DTL2UHjHP9ttUzkC
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+
+jwt:
+  secret: seven-shop-secret-key-2024-very-long-secret
+  expiration: 86400000
+
+app:
+  admin-email: rainbowool@163.com
