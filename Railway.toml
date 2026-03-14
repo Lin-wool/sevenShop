@@ -1,4 +1,3 @@
 [build]
-builder = "maven"
-buildCommand = "cd backend && mvn clean package -DskipTests"
-startCommand = "cd backend && java -jar target/seven-shop-1.0.0.jar"
+builder = "docker"
+startCommand = "java -jar app.jar"
