@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"F:\\\\workspace\\\\sevenShop\\\\backend\" && mvn compile 2>&1)",
+      "Bash(cd \"F:\\\\workspace\\\\sevenShop\\\\frontend\" && npm install 2>&1)",
+      "Bash(cmd.exe /c \"mvn --version\" 2>&1 || echo \"Maven not available via cmd\")",
+      "Bash(curl -s http://localhost:5173/src/views/Products.vue 2>&1 | head -50)",
+      "Bash(winget list:*)",
+      "Bash(mvn compile:*)",
+      "WebSearch",
+      "Bash(gh --version)"
+    ]
+  }
+}
