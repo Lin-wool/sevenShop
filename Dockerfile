@@ -10,4 +10,4 @@ COPY --from=build /app/backend/target/seven-shop-1.0.0.jar app.jar
 
 # Railway 环境变量会在运行时自动注入
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Shanghai", "-jar", "app.jar"]
