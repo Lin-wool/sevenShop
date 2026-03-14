@@ -315,10 +315,14 @@ const fetchAddresses = async () => {
 }
 
 const openOrderDialog = async (product) => {
+  // 确保地址已加载
   if (addresses.value.length === 0) {
-    ElMessage.warning('请先添加收货地址')
-    router.push('/m/addresses')
-    return
+    await fetchAddresses()
+    if (addresses.value.length === 0) {
+      ElMessage.warning('请先添加收货地址')
+      router.push('/m/addresses')
+      return
+    }
   }
 
   try {
