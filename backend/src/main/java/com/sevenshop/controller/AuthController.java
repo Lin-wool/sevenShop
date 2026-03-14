@@ -39,7 +39,7 @@ public class AuthController {
             ));
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage() != null ? e.getMessage() : "登录失败"));
         }
     }
 
@@ -53,7 +53,7 @@ public class AuthController {
                 "nickname", user.getNickname()
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage() != null ? e.getMessage() : "登录失败"));
         }
     }
 
@@ -100,7 +100,7 @@ public class AuthController {
                 "email", user.getEmail() != null ? user.getEmail() : ""
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage() != null ? e.getMessage() : "登录失败"));
         }
     }
 
@@ -120,7 +120,7 @@ public class AuthController {
             userService.changePassword(userId, oldPassword, newPassword);
             return ResponseEntity.ok(Map.of("message", "密码修改成功"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage() != null ? e.getMessage() : "登录失败"));
         }
     }
 }
