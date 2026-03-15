@@ -9,7 +9,20 @@
       "Bash(mvn compile:*)",
       "WebSearch",
       "Bash(gh --version)",
-      "WebFetch(domain:minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com)"
+      "WebFetch(domain:minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com)",
+      "Bash(curl -s -X POST 'http://localhost:8080/api/auth/login' -H 'Content-Type: application/json' --data-raw '{\"\"username\"\":\"\"admin\"\",\"\"password\"\":\"\"admin123\"\"}')",
+      "Bash(curl -s 'https://sevenshop-production.up.railway.app/api/addresses' -H 'Content-Type: application/json')",
+      "Bash(where claude:*)",
+      "Bash(npm root:*)",
+      "Bash(npm list:*)",
+      "Bash(openspec-cn new:*)",
+      "Bash(openspec-cn status:*)",
+      "Bash(openspec-cn instructions:*)",
+      "Bash(./mvnw.cmd compile:*)",
+      "Bash(cmd //c mvnw.cmd compile -q)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:8080/api/products)"
     ]
   }
 }

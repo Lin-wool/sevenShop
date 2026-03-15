@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)",
+      "Bash(openspec-cn list:*)",
+      "Bash(mvn -f backend/pom.xml clean package -DskipTests)",
+      "Bash(./backend/mvnw.cmd -f backend/pom.xml clean package -DskipTests)"
+    ]
+  }
+}
