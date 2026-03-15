@@ -5,19 +5,18 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("sys_user")
-public class User {
+@TableName("order_items")
+public class OrderItem {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String username;
-    private String password;
-    private String role; // ADMIN / USER
-    private String nickname;
-    private String email;
-    private String phone;
-    private Integer status; // 1: 正常, 0: 禁用
+    private Long orderId;
+    private Long productId;
+    private String specs; // JSON 格式：{"甜度":"正常冰","加料":"珍珠"}
+    private BigDecimal price; // 下单时的单价
+    private Integer quantity;
     private LocalDateTime createdAt;
 }

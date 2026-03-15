@@ -21,7 +21,24 @@ api.interceptors.request.use(
 )
 
 api.interceptors.response.use(
-  response => response,
+  response => {
+    // 处理统一的 ApiResponse 格式
+    const res = response.data
+    if (res && res.code !== undefined) {
+      // 如果返回了 ApiResponse 格式
+      if (res.code === 200) {
+        // 成功，提取 data 字段返回
+        return res.data !== undefined ? res.data : res
+      } else {
+        // 业务错误，抛出异常
+        const error = new Error(res.message || '请求失败')
+        error.response = { data: res, status: res.code }
+        return Promise.reject(error)
+      }
+    }
+    // 旧格式直接返回
+    return response
+  },
   error => {
     if (error.response?.status === 401) {
       const userStore = useUserStore()

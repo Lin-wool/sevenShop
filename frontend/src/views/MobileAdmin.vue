@@ -11,6 +11,11 @@
 
     <!-- 功能菜单 -->
     <div class="menu-section">
+      <div class="menu-item" @click="currentTab = 'overview'">
+        <span class="menu-icon">📊</span>
+        <span class="menu-text">数据概览</span>
+        <span class="menu-arrow">›</span>
+      </div>
       <div class="menu-item" @click="currentTab = 'products'">
         <span class="menu-icon">🛍️</span>
         <span class="menu-text">商品管理</span>
@@ -20,6 +25,38 @@
         <span class="menu-icon">📦</span>
         <span class="menu-text">订单管理</span>
         <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" @click="currentTab = 'specs'">
+        <span class="menu-icon">📝</span>
+        <span class="menu-text">规格模板</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" @click="currentTab = 'users'">
+        <span class="menu-icon">👥</span>
+        <span class="menu-text">用户管理</span>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- 数据概览 -->
+    <div class="overview-section" v-if="currentTab === 'overview'">
+      <div class="stats-grid">
+        <div class="stat-card" @click="goToProducts" style="cursor: pointer;">
+          <div class="stat-value">{{ stats.productCount }}</div>
+          <div class="stat-label">商品数量</div>
+        </div>
+        <div class="stat-card" @click="goToPendingOrders" style="cursor: pointer;">
+          <div class="stat-value">{{ stats.pendingOrderCount }}</div>
+          <div class="stat-label">待处理订单</div>
+        </div>
+        <div class="stat-card" @click="goToHandledOrders" style="cursor: pointer;">
+          <div class="stat-value">{{ stats.handledOrderCount }}</div>
+          <div class="stat-label">已完成订单</div>
+        </div>
+        <div class="stat-card" @click="goToUsers" style="cursor: pointer;">
+          <div class="stat-value">{{ stats.userCount }}</div>
+          <div class="stat-label">用户数量</div>
+        </div>
       </div>
     </div>
 
@@ -39,8 +76,8 @@
             <div class="product-price">¥{{ product.price }}</div>
           </div>
           <div class="product-actions">
-            <el-button type="primary" size="small" link @click="openProductDialog(product)">编辑</el-button>
-            <el-button type="danger" size="small" link @click="deleteProduct(product.id)">删除</el-button>
+            <el-button type="primary" size="small" round @click="openProductDialog(product)">编辑</el-button>
+            <el-button type="danger" size="small" round @click="deleteProduct(product.id)">删除</el-button>
           </div>
         </div>
         <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
@@ -93,12 +130,16 @@
               </div>
             </div>
           </div>
+          <div class="order-user" v-if="order.userNickname">
+            <span class="user-label">下单人:</span>
+            <span class="user-name">{{ order.userNickname }}</span>
+          </div>
           <div class="order-actions">
             <el-button
               v-if="order.status === 0"
               type="success"
               size="small"
-              link
+              round
               @click="handleOrder(order.id)"
             >
               处理订单
@@ -106,6 +147,97 @@
           </div>
         </div>
         <el-empty v-if="!orderLoading && orders.length === 0" description="暂无订单" />
+      </div>
+    </div>
+
+    <!-- 规格模板 -->
+    <div class="spec-section" v-if="currentTab === 'specs'">
+      <div class="section-header">
+        <span class="section-title">规格模板</span>
+        <el-button type="primary" size="small" round @click="openSpecDialog()">
+          + 添加规格
+        </el-button>
+      </div>
+      <div class="spec-list" v-loading="specLoading">
+        <div v-for="spec in specTemplates" :key="spec.id" class="spec-item">
+          <div class="spec-info">
+            <div class="spec-name">{{ spec.name }}</div>
+            <div class="spec-detail">{{ spec.specName }}: {{ spec.specValues }}</div>
+          </div>
+          <div class="spec-actions">
+            <el-button type="primary" size="small" round @click="openSpecDialog(spec)">编辑</el-button>
+            <el-button type="danger" size="small" round @click="deleteSpec(spec.id)">删除</el-button>
+          </div>
+        </div>
+        <el-empty v-if="!specLoading && specTemplates.length === 0" description="暂无规格模板" />
+      </div>
+    </div>
+
+    <!-- 规格模板编辑弹窗 -->
+    <el-dialog
+      v-model="specDialogVisible"
+      :title="editingSpec ? '编辑规格模板' : '添加规格模板'"
+      width="90%"
+    >
+      <el-form :model="specForm" label-width="80px">
+        <el-form-item label="模板名称">
+          <el-input v-model="specForm.name" placeholder="如：奶茶、咖啡" />
+        </el-form-item>
+        <el-form-item label="规格名称">
+          <el-input v-model="specForm.specName" placeholder="如：甜度、温度" />
+        </el-form-item>
+        <el-form-item label="规格值">
+          <el-input v-model="specForm.specValues" type="textarea" :rows="2" placeholder="多个值用逗号分隔" />
+        </el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="specForm.sort" :min="0" :max="999" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="specDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="specSubmitting" @click="submitSpec">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 用户管理 -->
+    <div class="user-section" v-if="currentTab === 'users'">
+      <div class="section-header">
+        <span class="section-title">用户管理</span>
+      </div>
+      <div class="user-list" v-loading="userLoading">
+        <div v-for="user in users" :key="user.id" class="user-item">
+          <div class="user-avatar">{{ user.nickname?.charAt(0) || user.username?.charAt(0) || '?' }}</div>
+          <div class="user-info">
+            <div class="user-name">{{ user.nickname || user.username }}</div>
+            <div class="user-email">{{ user.email }}</div>
+          </div>
+          <div class="user-status">
+            <el-tag :type="user.status === 1 ? 'success' : 'danger'" size="small">
+              {{ user.status === 1 ? '正常' : '禁用' }}
+            </el-tag>
+          </div>
+          <div class="user-actions">
+            <el-button
+              v-if="user.status === 1"
+              type="danger"
+              size="small"
+              round
+              @click="toggleUserStatus(user)"
+            >
+              禁用
+            </el-button>
+            <el-button
+              v-else
+              type="success"
+              size="small"
+              round
+              @click="toggleUserStatus(user)"
+            >
+              启用
+            </el-button>
+          </div>
+        </div>
+        <el-empty v-if="!userLoading && users.length === 0" description="暂无用户" />
       </div>
     </div>
 
@@ -153,32 +285,7 @@
     </el-dialog>
 
     <!-- 底部导航栏 -->
-    <div class="mobile-tabbar">
-      <div class="tab-item" @click="router.push('/m')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🏪</span>
-        </div>
-        <span>商城</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/orders')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">📋</span>
-        </div>
-        <span>订单</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/addresses')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🚚</span>
-        </div>
-        <span>配送</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/profile')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">👤</span>
-        </div>
-        <span>我的</span>
-      </div>
-    </div>
+    <MobileTabbar />
   </div>
 </template>
 
@@ -188,9 +295,34 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import api from '../api'
+import MobileTabbar from '../components/MobileTabbar.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// 跳转到商品管理
+const goToProducts = () => {
+  currentTab.value = 'products'
+}
+
+// 跳转到待处理订单
+const goToPendingOrders = () => {
+  currentTab.value = 'orders'
+  orderStatus.value = 0
+  fetchOrders()
+}
+
+// 跳转到已完成订单
+const goToHandledOrders = () => {
+  currentTab.value = 'orders'
+  orderStatus.value = 1
+  fetchOrders()
+}
+
+// 跳转到用户管理
+const goToUsers = () => {
+  currentTab.value = 'users'
+}
 
 const loading = ref(false)
 const products = ref([])
@@ -201,10 +333,32 @@ const submitting = ref(false)
 const formRef = ref()
 
 // 订单管理
-const currentTab = ref('products')
+const currentTab = ref('overview')
 const orders = ref([])
 const orderLoading = ref(false)
 const orderStatus = ref(null)
+
+// 数据统计
+const stats = ref({
+  productCount: 0,
+  pendingOrderCount: 0,
+  handledOrderCount: 0,
+  userCount: 0
+})
+
+// 规格模板管理
+const specLoading = ref(false)
+const specTemplates = ref([])
+const specDialogVisible = ref(false)
+const editingSpec = ref(null)
+const specSubmitting = ref(false)
+
+const specForm = reactive({
+  name: '',
+  specName: '',
+  specValues: '',
+  sort: 0
+})
 
 const productForm = reactive({
   name: '',
@@ -224,7 +378,7 @@ const fetchProducts = async () => {
   loading.value = true
   try {
     const res = await api.get('/products', { params: { page: 1, size: 50 } })
-    products.value = res.data.records
+    products.value = res.records
   } catch (error) {
     ElMessage.error('获取商品失败')
   } finally {
@@ -235,7 +389,7 @@ const fetchProducts = async () => {
 const fetchCategories = async () => {
   try {
     const res = await api.get('/categories')
-    categories.value = res.data
+    categories.value = res
   } catch (error) {
     console.error('获取分类失败:', error)
   }
@@ -251,7 +405,7 @@ const fetchOrders = async () => {
         status: orderStatus.value
       }
     })
-    orders.value = res.data.records
+    orders.value = res.records
   } catch (error) {
     ElMessage.error('获取订单失败')
   } finally {
@@ -262,6 +416,150 @@ const fetchOrders = async () => {
 const changeOrderStatus = (status) => {
   orderStatus.value = status
   fetchOrders()
+}
+
+const fetchStats = async () => {
+  try {
+    // 分别调用每个API，这样一个失败不会影响其他
+    let productCount = 0
+    let pendingOrderCount = 0
+    let handledOrderCount = 0
+    let userCount = 0
+
+    try {
+      const productsRes = await api.get('/products', { params: { page: 1, size: 1 } })
+      productCount = productsRes?.total || 0
+    } catch (e) {
+      console.error('获取商品数量失败:', e)
+    }
+
+    try {
+      const ordersRes = await api.get('/orders', { params: { page: 1, size: 1, status: 0 } })
+      pendingOrderCount = ordersRes?.total || 0
+    } catch (e) {
+      console.error('获取待处理订单失败:', e)
+    }
+
+    try {
+      const allOrdersRes = await api.get('/orders', { params: { page: 1, size: 100 } })
+      const allOrders = allOrdersRes?.records || []
+      handledOrderCount = allOrders.filter(o => o.status === 1).length
+    } catch (e) {
+      console.error('获取所有订单失败:', e)
+    }
+
+    try {
+      const usersRes = await api.get('/users', { params: { page: 1, size: 1 } })
+      userCount = usersRes?.total || 0
+    } catch (e) {
+      console.error('获取用户数量失败:', e)
+    }
+
+    stats.value = {
+      productCount,
+      pendingOrderCount,
+      handledOrderCount,
+      userCount
+    }
+  } catch (error) {
+    console.error('获取统计失败:', error)
+  }
+}
+
+const fetchSpecTemplates = async () => {
+  specLoading.value = true
+  try {
+    const res = await api.get('/spec-templates/all')
+    specTemplates.value = res || []
+  } catch (error) {
+    console.error('获取规格模板失败:', error)
+  } finally {
+    specLoading.value = false
+  }
+}
+
+const openSpecDialog = (spec = null) => {
+  editingSpec.value = spec
+  if (spec) {
+    specForm.name = spec.name
+    specForm.specName = spec.specName
+    specForm.specValues = spec.specValues
+    specForm.sort = spec.sort
+  } else {
+    specForm.name = ''
+    specForm.specName = ''
+    specForm.specValues = ''
+    specForm.sort = 0
+  }
+  specDialogVisible.value = true
+}
+
+const submitSpec = async () => {
+  if (!specForm.name || !specForm.specName || !specForm.specValues) {
+    ElMessage.warning('请填写完整信息')
+    return
+  }
+
+  specSubmitting.value = true
+  try {
+    if (editingSpec.value) {
+      await api.put(`/spec-templates/${editingSpec.value.id}`, specForm)
+      ElMessage.success('更新成功')
+    } else {
+      await api.post('/spec-templates', specForm)
+      ElMessage.success('添加成功')
+    }
+    specDialogVisible.value = false
+    fetchSpecTemplates()
+  } catch (error) {
+    ElMessage.error(error.response?.data?.message || '操作失败')
+  } finally {
+    specSubmitting.value = false
+  }
+}
+
+const deleteSpec = async (id) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这个规格模板吗？', '提示', { type: 'warning' })
+    await api.delete(`/spec-templates/${id}`)
+    ElMessage.success('删除成功')
+    fetchSpecTemplates()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+// 用户管理
+const userLoading = ref(false)
+const users = ref([])
+
+const fetchUsers = async () => {
+  userLoading.value = true
+  try {
+    const res = await api.get('/users')
+    users.value = res.data?.records || res.records || res || []
+  } catch (error) {
+    console.error('获取用户失败:', error)
+  } finally {
+    userLoading.value = false
+  }
+}
+
+const toggleUserStatus = async (user) => {
+  const newStatus = user.status === 1 ? 0 : 1
+  const action = newStatus === 1 ? '启用' : '禁用'
+  try {
+    await ElMessageBox.confirm(`确定要${action}该用户吗？`, '提示', { type: 'warning' })
+    await api.put(`/users/${user.id}/status`, { status: newStatus })
+    ElMessage.success(`${action}成功`)
+    fetchUsers()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(`${action}失败`)
+    }
+  }
 }
 
 const handleOrder = async (orderId) => {
@@ -328,6 +626,7 @@ const deleteProduct = async (id) => {
 }
 
 onMounted(() => {
+  fetchStats()
   fetchProducts()
   fetchCategories()
   fetchOrders()
@@ -336,6 +635,12 @@ onMounted(() => {
 watch(currentTab, (newTab) => {
   if (newTab === 'orders') {
     fetchOrders()
+  } else if (newTab === 'overview') {
+    fetchStats()
+  } else if (newTab === 'specs') {
+    fetchSpecTemplates()
+  } else if (newTab === 'users') {
+    fetchUsers()
   }
 })
 </script>
@@ -471,8 +776,8 @@ watch(currentTab, (newTab) => {
 
 .product-actions {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  gap: 8px;
 }
 
 /* 订单列表 */
@@ -586,52 +891,168 @@ watch(currentTab, (newTab) => {
   color: #666;
 }
 
+.order-user {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #666;
+  border-top: 1px dashed #eee;
+}
+
+.user-label {
+  margin-right: 4px;
+}
+
+.user-name {
+  color: #333;
+  font-weight: 500;
+}
+
 .order-actions {
   display: flex;
   justify-content: flex-end;
 }
 
-.bottom-space {
-  height: 70px;
+/* 数据概览 */
+.overview-section {
+  margin: 12px;
 }
 
-/* 底部导航栏 */
-.mobile-tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
   background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0 12px;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
-  z-index: 1000;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.tab-item {
+.stat-card:active {
+  transform: scale(0.98);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #999;
+}
+
+/* 规格模板 */
+.spec-section {
+  margin: 12px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.spec-list {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.spec-item {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  justify-content: space-between;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.spec-info {
+  flex: 1;
+}
+
+.spec-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.spec-detail {
+  font-size: 12px;
   color: #999;
-  cursor: pointer;
 }
 
-.tab-item.active {
-  color: #667eea;
+.spec-actions {
+  display: flex;
+  gap: 8px;
 }
 
-.tab-icon-wrap {
-  width: 36px;
-  height: 36px;
+/* 用户管理 */
+.user-section {
+  margin: 12px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
 }
 
-.tab-icon {
-  font-size: 22px;
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #999;
+}
+
+.user-status {
+  margin-right: 8px;
+}
+
+.user-actions {
+  display: flex;
+}
+
+.bottom-space {
+  height: 70px;
 }
 </style>

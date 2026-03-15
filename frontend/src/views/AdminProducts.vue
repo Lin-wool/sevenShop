@@ -38,21 +38,23 @@
           {{ formatTime(row.createdAt) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="180">
+      <el-table-column label="操作" width="200">
         <template #default="{ row }">
-          <el-button type="primary" link @click="openDialog(row)">
-            编辑
-          </el-button>
-          <el-button
-            :type="row.status === 1 ? 'warning' : 'success'"
-            link
-            @click="toggleStatus(row)"
-          >
-            {{ row.status === 1 ? '下架' : '上架' }}
-          </el-button>
-          <el-button type="danger" link @click="deleteProduct(row.id)">
-            删除
-          </el-button>
+          <div class="action-buttons">
+            <el-button type="primary" size="small" @click="openDialog(row)">
+              编辑
+            </el-button>
+            <el-button
+              :type="row.status === 1 ? 'warning' : 'success'"
+              size="small"
+              @click="toggleStatus(row)"
+            >
+              {{ row.status === 1 ? '下架' : '上架' }}
+            </el-button>
+            <el-button type="danger" size="small" @click="deleteProduct(row.id)">
+              删除
+            </el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -209,8 +211,8 @@ const fetchProducts = async (newPage = 1) => {
     const res = await api.get('/products', {
       params: { page: newPage, size: size.value }
     })
-    products.value = res.data.records
-    total.value = res.data.total
+    products.value = res.records
+    total.value = res.total
     page.value = newPage
   } catch (error) {
     ElMessage.error('获取商品失败')
@@ -222,7 +224,7 @@ const fetchProducts = async (newPage = 1) => {
 const fetchCategories = async () => {
   try {
     const res = await api.get('/categories')
-    categories.value = res.data
+    categories.value = res
   } catch (error) {
     console.error('获取分类失败:', error)
   }
@@ -232,7 +234,7 @@ const fetchCategories = async () => {
 const fetchSpecTemplates = async () => {
   try {
     const res = await api.get('/spec-templates')
-    specTemplates.value = res.data
+    specTemplates.value = res
   } catch (error) {
     console.error('获取预设规格失败:', error)
   }
@@ -267,7 +269,7 @@ const openDialog = async (product = null) => {
     // 获取规格
     try {
       const res = await api.get(`/products/${product.id}`)
-      form.specs = (res.data.specs || []).map(s => ({
+      form.specs = (res.specs || []).map(s => ({
         specName: s.specName,
         specValues: s.specValues,
         specValuesText: s.specValues?.join(',') || ''
@@ -413,6 +415,11 @@ onMounted(() => {
 .price {
   color: #ff6b6b;
   font-weight: bold;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 .pagination {

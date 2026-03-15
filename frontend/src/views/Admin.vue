@@ -2,7 +2,7 @@
   <div class="admin-overview">
     <el-row :gutter="20">
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card class="stat-card" @click="router.push('/admin/products')" style="cursor: pointer;">
           <div class="stat-icon" style="background: #ff6b6b;">
             <el-icon size="32"><Goods /></el-icon>
           </div>
@@ -13,7 +13,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card class="stat-card" @click="router.push('/admin/orders?status=0')" style="cursor: pointer;">
           <div class="stat-icon" style="background: #ffb347;">
             <el-icon size="32"><Document /></el-icon>
           </div>
@@ -24,7 +24,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card class="stat-card" @click="router.push('/admin/orders?status=1')" style="cursor: pointer;">
           <div class="stat-icon" style="background: #4ecdc4;">
             <el-icon size="32"><CircleCheck /></el-icon>
           </div>
@@ -35,7 +35,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card class="stat-card" @click="router.push('/admin/users')" style="cursor: pointer;">
           <div class="stat-icon" style="background: #45b7d1;">
             <el-icon size="32"><User /></el-icon>
           </div>
@@ -129,20 +129,46 @@ const recentOrders = ref([])
 
 const fetchStats = async () => {
   try {
-    const [productsRes, ordersRes, allOrdersRes] = await Promise.all([
-      api.get('/products', { params: { page: 1, size: 1 } }),
-      api.get('/orders', { params: { page: 1, size: 1, status: 0 } }),
-      api.get('/orders', { params: { page: 1, size: 100 } })
-    ])
+    // 分别调用每个API，这样一个失败不会影响其他
+    let productCount = 0
+    let pendingOrderCount = 0
+    let handledOrderCount = 0
+    let userCount = 0
 
-    const allOrders = allOrdersRes.data.records || []
-    const handledCount = allOrders.filter(o => o.status === 1).length
+    try {
+      const productsRes = await api.get('/products', { params: { page: 1, size: 1 } })
+      productCount = productsRes?.total || 0
+    } catch (e) {
+      console.error('获取商品数量失败:', e)
+    }
+
+    try {
+      const ordersRes = await api.get('/orders', { params: { page: 1, size: 1, status: 0 } })
+      pendingOrderCount = ordersRes?.total || 0
+    } catch (e) {
+      console.error('获取待处理订单失败:', e)
+    }
+
+    try {
+      const allOrdersRes = await api.get('/orders', { params: { page: 1, size: 100 } })
+      const allOrders = allOrdersRes?.records || []
+      handledOrderCount = allOrders.filter(o => o.status === 1).length
+    } catch (e) {
+      console.error('获取所有订单失败:', e)
+    }
+
+    try {
+      const usersRes = await api.get('/users', { params: { page: 1, size: 1 } })
+      userCount = usersRes?.total || 0
+    } catch (e) {
+      console.error('获取用户数量失败:', e)
+    }
 
     stats.value = {
-      productCount: productsRes.data.total || 0,
-      pendingOrderCount: ordersRes.data.total || 0,
-      handledOrderCount: handledCount,
-      userCount: 1
+      productCount,
+      pendingOrderCount,
+      handledOrderCount,
+      userCount
     }
   } catch (error) {
     console.error('获取统计失败:', error)
@@ -155,7 +181,7 @@ const fetchRecentOrders = async () => {
     const res = await api.get('/orders', {
       params: { page: 1, size: 5 }
     })
-    recentOrders.value = res.data.records
+    recentOrders.value = res.records
   } catch (error) {
     console.error('获取订单失败:', error)
   } finally {

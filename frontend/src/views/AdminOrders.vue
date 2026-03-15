@@ -52,8 +52,8 @@
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === 0 ? 'warning' : 'success'">
-            {{ row.status === 0 ? '待处理' : '已处理' }}
+          <el-tag :type="getStatusType(row.status)">
+            {{ getStatusText(row.status) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -62,7 +62,7 @@
           {{ formatTime(row.createdAt) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="100">
+      <el-table-column label="操作" width="120">
         <template #default="{ row }">
           <el-button
             v-if="row.status === 0"
@@ -72,8 +72,11 @@
           >
             处理
           </el-button>
-          <span v-else class="handled-time">
+          <span v-else-if="row.status === 1" class="handled-time">
             {{ formatTime(row.handledAt) }}
+          </span>
+          <span v-else-if="row.status === -1" class="cancel-info">
+            已取消
           </span>
         </template>
       </el-table-column>
@@ -115,8 +118,8 @@ const fetchOrders = async (newPage = 1) => {
         status: statusFilter.value
       }
     })
-    orders.value = res.data.records
-    total.value = res.data.total
+    orders.value = res.records
+    total.value = res.total
     page.value = newPage
   } catch (error) {
     ElMessage.error('获取订单失败')
@@ -138,6 +141,24 @@ const handleOrder = async (id) => {
 const formatTime = (time) => {
   if (!time) return '-'
   return new Date(time).toLocaleString('zh-CN')
+}
+
+const getStatusType = (status) => {
+  const types = {
+    0: 'warning',
+    1: 'success',
+    '-1': 'info'
+  }
+  return types[status] || 'info'
+}
+
+const getStatusText = (status) => {
+  const texts = {
+    0: '待处理',
+    1: '已处理',
+    '-1': '已取消'
+  }
+  return texts[status] || '未知'
 }
 
 onMounted(() => {
@@ -198,6 +219,11 @@ onMounted(() => {
 }
 
 .handled-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.cancel-info {
   font-size: 12px;
   color: #999;
 }

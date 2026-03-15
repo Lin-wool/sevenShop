@@ -1,6 +1,8 @@
 package com.sevenshop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sevenshop.dto.LoginRequest;
 import com.sevenshop.dto.RegisterRequest;
 import com.sevenshop.entity.User;
@@ -111,6 +113,31 @@ public class UserService {
             throw new RuntimeException("原密码错误");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
+        userMapper.updateById(user);
+    }
+
+    // 获取用户列表（分页）
+    public IPage<User> getUserList(int page, int size) {
+        Page<User> pageParam = new Page<>(page, size);
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(User::getCreatedAt);
+        return userMapper.selectPage(pageParam, wrapper);
+    }
+
+    // 获取所有用户列表
+    public java.util.List<User> getAllUsers() {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(User::getCreatedAt);
+        return userMapper.selectList(wrapper);
+    }
+
+    // 更新用户状态
+    public void updateUserStatus(Long userId, Integer status) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        user.setStatus(status);
         userMapper.updateById(user);
     }
 }

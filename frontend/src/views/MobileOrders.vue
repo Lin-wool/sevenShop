@@ -32,6 +32,13 @@
       >
         已处理
       </div>
+      <div
+        class="status-tab"
+        :class="{ active: status === -1 }"
+        @click="changeStatus(-1)"
+      >
+        已取消
+      </div>
     </div>
 
     <!-- 订单列表 -->
@@ -43,11 +50,28 @@
       >
         <div class="order-header">
           <span class="order-no">订单号：{{ order.id }}</span>
-          <span class="order-status" :class="order.status === 0 ? 'pending' : 'processed'">
-            {{ order.status === 0 ? '待处理' : '已处理' }}
+          <span class="order-status" :class="getStatusClass(order.status)">
+            {{ getStatusText(order.status) }}
           </span>
         </div>
-        <div class="order-product">
+
+        <!-- 多商品订单 -->
+        <div v-if="order.items && order.items.length > 0" class="order-products">
+          <div v-for="item in order.items" :key="item.id" class="order-product">
+            <img :src="item.productImage || 'https://via.placeholder.com/80'" class="product-img" />
+            <div class="product-info">
+              <h3>{{ item.productName }}</h3>
+              <p class="specs" v-if="item.specs && Object.keys(item.specs).length > 0">{{ formatSpecs(item.specs) }}</p>
+              <p class="price-row">
+                <span class="price">¥{{ item.price }}</span>
+                <span class="quantity">x{{ item.quantity }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 兼容旧数据 -->
+        <div v-else class="order-product">
           <img :src="order.productImage || 'https://via.placeholder.com/80'" class="product-img" />
           <div class="product-info">
             <h3>{{ order.productName }}</h3>
@@ -58,12 +82,28 @@
             </p>
           </div>
         </div>
+
         <div class="order-footer">
-          <div class="address-info">
-            <span class="label">配送至：</span>
-            <span>{{ order.address }}</span>
+          <div class="footer-left">
+            <div class="total-price">
+              合计: <span class="price">¥{{ order.totalPrice || order.price }}</span>
+            </div>
           </div>
-          <div class="order-time">{{ formatTime(order.createdAt) }}</div>
+          <div class="footer-right">
+            <div v-if="order.status === -1" class="order-status-tag canceled">
+              已取消
+            </div>
+            <el-button
+              v-else-if="order.status === 0"
+              type="danger"
+              size="small"
+              round
+              @click="handleCancelOrder(order)"
+            >
+              取消订单
+            </el-button>
+            <el-tag v-else type="success" size="small">已完成</el-tag>
+          </div>
         </div>
       </div>
 
@@ -74,40 +114,16 @@
     </div>
 
     <!-- 底部导航栏 -->
-    <div class="mobile-tabbar">
-      <div class="tab-item" @click="router.push('/m')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🏪</span>
-        </div>
-        <span>商城</span>
-      </div>
-      <div class="tab-item active">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">📋</span>
-        </div>
-        <span>订单</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/addresses')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🚚</span>
-        </div>
-        <span>配送</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/profile')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">👤</span>
-        </div>
-        <span>我的</span>
-      </div>
-    </div>
+    <MobileTabbar />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
+import MobileTabbar from '../components/MobileTabbar.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -115,6 +131,12 @@ const route = useRoute()
 const loading = ref(false)
 const orders = ref([])
 const status = ref(null)
+
+// 取消订单相关
+const cancelDialogVisible = ref(false)
+const cancelForm = ref({ reason: '' })
+const canceling = ref(false)
+const currentCancelOrder = ref(null)
 
 // 组件挂载时加载数据
 onMounted(() => {
@@ -136,7 +158,7 @@ const fetchOrders = async () => {
         status: status.value
       }
     })
-    orders.value = res.data.records
+    orders.value = res.records
   } catch (error) {
     ElMessage.error('获取订单失败')
   } finally {
@@ -147,6 +169,24 @@ const fetchOrders = async () => {
 const changeStatus = (s) => {
   status.value = s
   fetchOrders()
+}
+
+const getStatusClass = (status) => {
+  const classes = {
+    0: 'pending',
+    1: 'processed',
+    '-1': 'canceled'
+  }
+  return classes[status] || ''
+}
+
+const getStatusText = (status) => {
+  const texts = {
+    0: '待处理',
+    1: '已处理',
+    '-1': '已取消'
+  }
+  return texts[status] || '未知'
 }
 
 const formatSpecs = (specs) => {
@@ -167,6 +207,25 @@ const formatTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+}
+
+// 取消订单
+const handleCancelOrder = (order) => {
+  ElMessageBox.confirm('确定要取消该订单吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await api.put(`/orders/${order.id}/cancel`, {
+        cancelReason: ''
+      })
+      ElMessage.success('订单已取消')
+      fetchOrders()
+    } catch (error) {
+      ElMessage.error(error.response?.data?.message || '取消失败')
+    }
+  }).catch(() => {})
 }
 
 onMounted(() => {
@@ -275,6 +334,21 @@ onMounted(() => {
   background: #e8f5e9;
 }
 
+.order-status-tag.canceled {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #fff1f0;
+  color: #ff4d4f;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .order-product {
   display: flex;
   gap: 12px;
@@ -323,8 +397,21 @@ onMounted(() => {
 }
 
 .order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 12px 14px;
   background: #fafafa;
+}
+
+.footer-left {
+  flex: 1;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .address-info {
@@ -344,45 +431,5 @@ onMounted(() => {
 
 .bottom-space {
   height: 70px;
-}
-
-/* 底部导航栏 */
-.mobile-tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0 12px;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
-  z-index: 1000;
-}
-
-.tab-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #999;
-  cursor: pointer;
-}
-
-.tab-item.active {
-  color: #667eea;
-}
-
-.tab-icon-wrap {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tab-icon {
-  font-size: 22px;
 }
 </style>
