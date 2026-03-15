@@ -1,6 +1,8 @@
 package com.sevenshop.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sevenshop.common.ApiResponse;
+import com.sevenshop.common.BusinessException;
 import com.sevenshop.dto.ProductRequest;
 import com.sevenshop.entity.Product;
 import com.sevenshop.entity.ProductSpec;
@@ -29,128 +31,109 @@ public class ProductController {
     private CategoryService categoryService;
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody ProductRequest request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Product>> createProduct(@RequestBody ProductRequest request, HttpServletRequest httpRequest) {
         String role = (String) httpRequest.getAttribute("role");
         if (!"ADMIN".equals(role)) {
-            return ResponseEntity.status(403).body(Map.of("message", "无权限"));
+            throw new BusinessException(403, "无权限");
         }
-        try {
-            Product product = productService.createProduct(request);
-            return ResponseEntity.ok(product);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Product product = productService.createProduct(request);
+        return ResponseEntity.ok(ApiResponse.success(product));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request, HttpServletRequest httpRequest) {
         String role = (String) httpRequest.getAttribute("role");
         if (!"ADMIN".equals(role)) {
-            return ResponseEntity.status(403).body(Map.of("message", "无权限"));
+            throw new BusinessException(403, "无权限");
         }
-        try {
-            Product product = productService.updateProduct(id, request);
-            return ResponseEntity.ok(product);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Product product = productService.updateProduct(id, request);
+        return ResponseEntity.ok(ApiResponse.success(product));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteProduct(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long id, HttpServletRequest httpRequest) {
         String role = (String) httpRequest.getAttribute("role");
         if (!"ADMIN".equals(role)) {
-            return ResponseEntity.status(403).body(Map.of("message", "无权限"));
+            throw new BusinessException(403, "无权限");
         }
-        try {
-            productService.deleteProduct(id);
-            return ResponseEntity.ok(Map.of("message", "删除成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        productService.deleteProduct(id);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getProduct(@PathVariable Long id) {
-        try {
-            Product product = productService.getProductById(id);
-            if (product == null) {
-                return ResponseEntity.notFound().build();
-            }
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getProduct(@PathVariable Long id) {
+        Product product = productService.getProductById(id);
+        if (product == null) {
+            throw new BusinessException(404, "商品不存在");
+        }
 
-            List<ProductSpec> specs = productService.getProductSpecs(id);
-            List<Map<String, Object>> specList = new ArrayList<>();
-            for (ProductSpec spec : specs) {
-                Map<String, Object> specMap = new HashMap<>();
-                specMap.put("id", spec.getId());
-                specMap.put("specName", spec.getSpecName());
-                specMap.put("specValues", productService.parseSpecValues(spec.getSpecValues()));
-                specList.add(specMap);
-            }
+        List<ProductSpec> specs = productService.getProductSpecs(id);
+        List<Map<String, Object>> specList = new ArrayList<>();
+        for (ProductSpec spec : specs) {
+            Map<String, Object> specMap = new HashMap<>();
+            specMap.put("id", spec.getId());
+            specMap.put("specName", spec.getSpecName());
+            specMap.put("specValues", productService.parseSpecValues(spec.getSpecValues()));
+            specList.add(specMap);
+        }
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("id", product.getId());
-            result.put("name", product.getName());
-            result.put("imageUrl", product.getImageUrl());
-            result.put("price", product.getPrice());
-            result.put("categoryId", product.getCategoryId());
-            result.put("status", product.getStatus());
-            result.put("createdAt", product.getCreatedAt());
-            result.put("specs", specList);
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", product.getId());
+        result.put("name", product.getName());
+        result.put("imageUrl", product.getImageUrl());
+        result.put("price", product.getPrice());
+        result.put("categoryId", product.getCategoryId());
+        result.put("status", product.getStatus());
+        result.put("createdAt", product.getCreatedAt());
+        result.put("specs", specList);
+
+        // 获取分类名称
+        if (product.getCategoryId() != null) {
+            Category category = categoryService.getCategoryById(product.getCategoryId());
+            if (category != null) {
+                result.put("categoryName", category.getName());
+            }
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getProductList(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String keyword) {
+        Page<Product> productPage = productService.getProductList(page, size, categoryId, keyword);
+
+        List<Map<String, Object>> records = new ArrayList<>();
+        for (Product product : productPage.getRecords()) {
+            Map<String, Object> productMap = new HashMap<>();
+            productMap.put("id", product.getId());
+            productMap.put("name", product.getName());
+            productMap.put("imageUrl", product.getImageUrl());
+            productMap.put("price", product.getPrice());
+            productMap.put("categoryId", product.getCategoryId());
+            productMap.put("status", product.getStatus());
+            productMap.put("createdAt", product.getCreatedAt());
 
             // 获取分类名称
             if (product.getCategoryId() != null) {
                 Category category = categoryService.getCategoryById(product.getCategoryId());
                 if (category != null) {
-                    result.put("categoryName", category.getName());
+                    productMap.put("categoryName", category.getName());
                 }
             }
 
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            records.add(productMap);
         }
-    }
 
-    @GetMapping
-    public ResponseEntity<?> getProductList(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String keyword) {
-        try {
-            Page<Product> productPage = productService.getProductList(page, size, categoryId, keyword);
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", records);
+        result.put("total", productPage.getTotal());
+        result.put("pages", productPage.getPages());
+        result.put("current", productPage.getCurrent());
 
-            List<Map<String, Object>> records = new ArrayList<>();
-            for (Product product : productPage.getRecords()) {
-                Map<String, Object> productMap = new HashMap<>();
-                productMap.put("id", product.getId());
-                productMap.put("name", product.getName());
-                productMap.put("imageUrl", product.getImageUrl());
-                productMap.put("price", product.getPrice());
-                productMap.put("categoryId", product.getCategoryId());
-                productMap.put("status", product.getStatus());
-                productMap.put("createdAt", product.getCreatedAt());
-
-                // 获取分类名称
-                if (product.getCategoryId() != null) {
-                    Category category = categoryService.getCategoryById(product.getCategoryId());
-                    if (category != null) {
-                        productMap.put("categoryName", category.getName());
-                    }
-                }
-
-                records.add(productMap);
-            }
-
-            return ResponseEntity.ok(Map.of(
-                "records", records,
-                "total", productPage.getTotal(),
-                "pages", productPage.getPages(),
-                "current", productPage.getCurrent()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

@@ -6,6 +6,8 @@ CREATE TABLE `sys_user` (
     role VARCHAR(20) NOT NULL DEFAULT 'USER',
     nickname VARCHAR(50),
     email VARCHAR(100),
+    phone VARCHAR(20),
+    status INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -44,20 +46,35 @@ CREATE TABLE address (
 CREATE TABLE orders (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    product_id BIGINT NOT NULL,
-    specs VARCHAR(1000),
+    product_id BIGINT,  -- 保留用于单商品下单兼容
+    specs VARCHAR(1000),  -- 保留用于单商品下单兼容
     address VARCHAR(500),
     remark VARCHAR(500),
-    status INT DEFAULT 0,
-    price DECIMAL(10,2),
-    quantity INT DEFAULT 1,
+    status INT DEFAULT 0,  -- 0: 待处理, 1: 已处理, -1: 已取消
+    price DECIMAL(10,2),  -- 保留用于单商品下单兼容（单价）
+    quantity INT DEFAULT 1,  -- 保留用于单商品下单兼容
+    total_price DECIMAL(10,2),  -- 订单总金额
+    cancel_reason VARCHAR(500),  -- 取消原因
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    handled_at TIMESTAMP
+    handled_at TIMESTAMP,
+    canceled_at TIMESTAMP  -- 取消时间
+);
+
+-- 订单商品关联表
+CREATE TABLE order_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    specs VARCHAR(1000),  -- JSON格式：{"甜度":"正常冰","加料":"珍珠"}
+    price DECIMAL(10,2) NOT NULL,  -- 下单时的单价
+    quantity INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 添加索引提升查询性能
 CREATE INDEX idx_orders_user_id ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
 
 -- 商品规格模板表
 CREATE TABLE IF NOT EXISTS product_spec_template (

@@ -28,8 +28,8 @@
         :md="8"
         :lg="6"
       >
-        <el-card class="product-card" shadow="hover" @click="openOrderDialog(product)">
-          <div class="product-image">
+        <el-card class="product-card" shadow="hover">
+          <div class="product-image" @click="openOrderDialog(product)">
             <img
               :src="product.imageUrl || 'https://via.placeholder.com/200'"
               :alt="product.name"
@@ -39,6 +39,10 @@
             <h3>{{ product.name }}</h3>
             <p class="category">{{ product.categoryName }}</p>
             <p class="price">¥{{ product.price }}</p>
+            <div class="product-actions">
+              <el-button size="small" @click="addToCart(product)">加入购物车</el-button>
+              <el-button size="small" type="primary" @click="openOrderDialog(product)">立即下单</el-button>
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -111,6 +115,7 @@
 
     <template #footer>
       <el-button @click="orderDialogVisible = false">取消</el-button>
+      <el-button @click="addToCartFromDialog">加入购物车</el-button>
       <el-button type="primary" :loading="submitting" @click="submitOrder">
         提交订单
       </el-button>
@@ -123,8 +128,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import api from '../api'
+import { useCartStore } from '../stores/cart'
 
 const router = useRouter()
+const cartStore = useCartStore()
 
 const loading = ref(false)
 const products = ref([])
@@ -149,7 +156,7 @@ const fetchProducts = async () => {
     const res = await api.get('/products', {
       params: { page: 1, size: 50, categoryId: categoryId.value }
     })
-    products.value = res.data.records
+    products.value = res.records
   } catch (error) {
     ElMessage.error('获取商品失败')
   } finally {
@@ -160,7 +167,7 @@ const fetchProducts = async () => {
 const fetchCategories = async () => {
   try {
     const res = await api.get('/categories')
-    categories.value = res.data
+    categories.value = res
   } catch (error) {
     console.error('获取分类失败:', error)
   }
@@ -169,7 +176,7 @@ const fetchCategories = async () => {
 const fetchAddresses = async () => {
   try {
     const res = await api.get('/addresses')
-    addresses.value = res.data
+    addresses.value = res
     if (addresses.value.length > 0) {
       const defaultAddr = addresses.value.find(a => a.isDefault === 1)
       orderForm.addressId = defaultAddr?.id || addresses.value[0].id
@@ -192,7 +199,7 @@ const openOrderDialog = async (product) => {
 
   try {
     const res = await api.get(`/products/${product.id}`)
-    selectedProduct.value = res.data
+    selectedProduct.value = res
     orderForm.specs = {}
     orderForm.remark = ''
 
@@ -209,6 +216,35 @@ const openOrderDialog = async (product) => {
   } catch (error) {
     ElMessage.error('获取商品详情失败')
   }
+}
+
+// 加入购物车
+const addToCart = async (product) => {
+  try {
+    const res = await api.get(`/products/${product.id}`)
+    const fullProduct = res
+
+    // 构建规格
+    const specs = {}
+    fullProduct.specs?.forEach(spec => {
+      if (spec.specValues && spec.specValues.length > 0) {
+        specs[spec.specName] = spec.specValues[0]
+      }
+    })
+
+    cartStore.addItem(fullProduct, specs, 1)
+    ElMessage.success('已加入购物车')
+  } catch (error) {
+    ElMessage.error('加入购物车失败')
+  }
+}
+
+// 加入购物车（从对话框）
+const addToCartFromDialog = () => {
+  if (!selectedProduct.value) return
+  cartStore.addItem(selectedProduct.value, orderForm.specs, orderForm.quantity || 1)
+  orderDialogVisible.value = false
+  ElMessage.success('已加入购物车')
 }
 
 const submitOrder = async () => {
@@ -300,6 +336,12 @@ onMounted(() => {
   font-weight: bold;
   color: #ff6b6b;
   margin: 0;
+}
+
+.product-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .order-product-info {

@@ -34,6 +34,11 @@ const routes = [
         component: () => import('../views/MobileAddresses.vue')
       },
       {
+        path: 'cart',
+        name: 'MobileCart',
+        component: () => import('../views/MobileCart.vue')
+      },
+      {
         path: 'profile',
         name: 'MobileProfile',
         component: () => import('../views/MobileProfile.vue')
@@ -71,6 +76,11 @@ const routes = [
         path: 'addresses',
         name: 'Addresses',
         component: () => import('../views/Addresses.vue')
+      },
+      {
+        path: 'cart',
+        name: 'Cart',
+        component: () => import('../views/Cart.vue')
       }
     ]
   },
@@ -99,6 +109,11 @@ const routes = [
         path: 'orders',
         name: 'AdminOrders',
         component: () => import('../views/AdminOrders.vue')
+      },
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('../views/AdminUsers.vue')
       }
     ]
   }

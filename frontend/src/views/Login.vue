@@ -80,8 +80,8 @@ const handleLogin = async () => {
   loading.value = true
   try {
     const res = await api.post('/auth/login', form)
-    userStore.setToken(res.data.token)
-    userStore.setUser(res.data.user)
+    userStore.setToken(res.token)
+    userStore.setUser(res.user)
     ElMessage.success('登录成功')
     router.push(getHomePath())
   } catch (error) {

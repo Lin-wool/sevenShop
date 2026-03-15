@@ -23,6 +23,10 @@
             <el-icon><List /></el-icon>
             <span>我的订单</span>
           </el-menu-item>
+          <el-menu-item index="/cart">
+            <el-icon><ShoppingCart /></el-icon>
+            <span>购物车</span>
+          </el-menu-item>
           <el-menu-item index="/addresses">
             <el-icon><Location /></el-icon>
             <span>收货地址</span>
@@ -57,7 +61,7 @@
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import { House, ShoppingBag, List, Location, Setting } from '@element-plus/icons-vue'
+import { House, ShoppingBag, List, Location, Setting, ShoppingCart } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -71,6 +75,7 @@ const pageTitle = computed(() => {
     '/': '首页',
     '/products': '商品列表',
     '/orders': '我的订单',
+    '/cart': '购物车',
     '/addresses': '收货地址'
   }
   return titles[route.path] || '情侣商城'

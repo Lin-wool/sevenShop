@@ -1,5 +1,6 @@
 package com.sevenshop.controller;
 
+import com.sevenshop.common.ApiResponse;
 import com.sevenshop.entity.ProductSpecTemplate;
 import com.sevenshop.service.ProductSpecTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,45 +19,33 @@ public class ProductSpecTemplateController {
     private ProductSpecTemplateService service;
 
     @GetMapping
-    public ResponseEntity<?> getTemplates() {
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getTemplates() {
         List<Map<String, Object>> templates = service.getGroupedTemplates();
-        return ResponseEntity.ok(templates);
+        return ResponseEntity.ok(ApiResponse.success(templates));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAllTemplates() {
+    public ResponseEntity<ApiResponse<List<ProductSpecTemplate>>> getAllTemplates() {
         List<ProductSpecTemplate> templates = service.getAllTemplates();
-        return ResponseEntity.ok(templates);
+        return ResponseEntity.ok(ApiResponse.success(templates));
     }
 
     @PostMapping
-    public ResponseEntity<?> createTemplate(@RequestBody ProductSpecTemplate template) {
-        try {
-            service.createTemplate(template);
-            return ResponseEntity.ok(Map.of("message", "创建成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Void>> createTemplate(@RequestBody ProductSpecTemplate template) {
+        service.createTemplate(template);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTemplate(@PathVariable Long id, @RequestBody ProductSpecTemplate template) {
-        try {
-            template.setId(id);
-            service.updateTemplate(template);
-            return ResponseEntity.ok(Map.of("message", "更新成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Void>> updateTemplate(@PathVariable Long id, @RequestBody ProductSpecTemplate template) {
+        template.setId(id);
+        service.updateTemplate(template);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTemplate(@PathVariable Long id) {
-        try {
-            service.deleteTemplate(id);
-            return ResponseEntity.ok(Map.of("message", "删除成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Void>> deleteTemplate(@PathVariable Long id) {
+        service.deleteTemplate(id);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }

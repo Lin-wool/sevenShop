@@ -102,7 +102,7 @@ const fetchTemplates = async () => {
   loading.value = true
   try {
     const res = await api.get('/spec-templates/all')
-    templates.value = res.data
+    templates.value = res
   } catch (error) {
     ElMessage.error('获取规格模板失败')
   } finally {

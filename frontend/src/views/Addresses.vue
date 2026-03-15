@@ -118,7 +118,7 @@ const fetchAddresses = async () => {
   loading.value = true
   try {
     const res = await api.get('/addresses')
-    addresses.value = res.data
+    addresses.value = res
   } catch (error) {
     ElMessage.error('获取地址失败')
   } finally {

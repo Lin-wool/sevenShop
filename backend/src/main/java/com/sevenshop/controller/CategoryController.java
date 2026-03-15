@@ -1,5 +1,7 @@
 package com.sevenshop.controller;
 
+import com.sevenshop.common.ApiResponse;
+import com.sevenshop.common.BusinessException;
 import com.sevenshop.entity.Category;
 import com.sevenshop.service.CategoryService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,71 +21,51 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @PostMapping
-    public ResponseEntity<?> createCategory(@RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Category>> createCategory(@RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
         String role = (String) httpRequest.getAttribute("role");
         if (!"ADMIN".equals(role)) {
-            return ResponseEntity.status(403).body(Map.of("message", "无权限"));
+            throw new BusinessException(403, "无权限");
         }
-        try {
-            String name = (String) request.get("name");
-            Integer sort = request.get("sort") != null ? (Integer) request.get("sort") : 0;
-            Category category = categoryService.createCategory(name, sort);
-            return ResponseEntity.ok(category);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        String name = (String) request.get("name");
+        Integer sort = request.get("sort") != null ? (Integer) request.get("sort") : 0;
+        Category category = categoryService.createCategory(name, sort);
+        return ResponseEntity.ok(ApiResponse.success(category));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Category>> updateCategory(@PathVariable Long id, @RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
         String role = (String) httpRequest.getAttribute("role");
         if (!"ADMIN".equals(role)) {
-            return ResponseEntity.status(403).body(Map.of("message", "无权限"));
+            throw new BusinessException(403, "无权限");
         }
-        try {
-            String name = (String) request.get("name");
-            Integer sort = request.get("sort") != null ? (Integer) request.get("sort") : null;
-            Category category = categoryService.updateCategory(id, name, sort);
-            return ResponseEntity.ok(category);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        String name = (String) request.get("name");
+        Integer sort = request.get("sort") != null ? (Integer) request.get("sort") : null;
+        Category category = categoryService.updateCategory(id, name, sort);
+        return ResponseEntity.ok(ApiResponse.success(category));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCategory(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id, HttpServletRequest httpRequest) {
         String role = (String) httpRequest.getAttribute("role");
         if (!"ADMIN".equals(role)) {
-            return ResponseEntity.status(403).body(Map.of("message", "无权限"));
+            throw new BusinessException(403, "无权限");
         }
-        try {
-            categoryService.deleteCategory(id);
-            return ResponseEntity.ok(Map.of("message", "删除成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        categoryService.deleteCategory(id);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllCategories() {
-        try {
-            List<Category> categories = categoryService.getAllCategories();
-            return ResponseEntity.ok(categories);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<List<Category>>> getAllCategories() {
+        List<Category> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok(ApiResponse.success(categories));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCategory(@PathVariable Long id) {
-        try {
-            Category category = categoryService.getCategoryById(id);
-            if (category == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(category);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+    public ResponseEntity<ApiResponse<Category>> getCategory(@PathVariable Long id) {
+        Category category = categoryService.getCategoryById(id);
+        if (category == null) {
+            throw new BusinessException(404, "分类不存在");
         }
+        return ResponseEntity.ok(ApiResponse.success(category));
     }
 }

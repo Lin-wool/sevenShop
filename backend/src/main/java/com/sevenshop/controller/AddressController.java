@@ -1,5 +1,7 @@
 package com.sevenshop.controller;
 
+import com.sevenshop.common.ApiResponse;
+import com.sevenshop.common.BusinessException;
 import com.sevenshop.dto.AddressRequest;
 import com.sevenshop.entity.Address;
 import com.sevenshop.service.AddressService;
@@ -9,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/addresses")
@@ -20,89 +21,62 @@ public class AddressController {
     private AddressService addressService;
 
     @PostMapping
-    public ResponseEntity<?> createAddress(@RequestBody AddressRequest request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Address>> createAddress(@RequestBody AddressRequest request, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "请先登录"));
+            throw new BusinessException(401, "请先登录");
         }
-        try {
-            Address address = addressService.createAddress(userId, request);
-            return ResponseEntity.ok(address);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Address address = addressService.createAddress(userId, request);
+        return ResponseEntity.ok(ApiResponse.success(address));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAddress(@PathVariable Long id, @RequestBody AddressRequest request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Address>> updateAddress(@PathVariable Long id, @RequestBody AddressRequest request, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "请先登录"));
+            throw new BusinessException(401, "请先登录");
         }
-        try {
-            Address address = addressService.updateAddress(userId, id, request);
-            return ResponseEntity.ok(address);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Address address = addressService.updateAddress(userId, id, request);
+        return ResponseEntity.ok(ApiResponse.success(address));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteAddress(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Void>> deleteAddress(@PathVariable Long id, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "请先登录"));
+            throw new BusinessException(401, "请先登录");
         }
-        try {
-            addressService.deleteAddress(userId, id);
-            return ResponseEntity.ok(Map.of("message", "删除成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        addressService.deleteAddress(userId, id);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @GetMapping
-    public ResponseEntity<?> getMyAddresses(HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<List<Address>>> getMyAddresses(HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "请先登录"));
+            throw new BusinessException(401, "请先登录");
         }
-        try {
-            List<Address> addresses = addressService.getUserAddresses(userId);
-            return ResponseEntity.ok(addresses);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        List<Address> addresses = addressService.getUserAddresses(userId);
+        return ResponseEntity.ok(ApiResponse.success(addresses));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getAddress(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Address>> getAddress(@PathVariable Long id, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "请先登录"));
+            throw new BusinessException(401, "请先登录");
         }
-        try {
-            Address address = addressService.getAddressById(userId, id);
-            return ResponseEntity.ok(address);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Address address = addressService.getAddressById(userId, id);
+        return ResponseEntity.ok(ApiResponse.success(address));
     }
 
     @GetMapping("/default")
-    public ResponseEntity<?> getDefaultAddress(HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Address>> getDefaultAddress(HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "请先登录"));
+            throw new BusinessException(401, "请先登录");
         }
-        try {
-            Address address = addressService.getDefaultAddress(userId);
-            if (address == null) {
-                return ResponseEntity.ok(null);
-            }
-            return ResponseEntity.ok(address);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Address address = addressService.getDefaultAddress(userId);
+        return ResponseEntity.ok(ApiResponse.success(address));
     }
 }

@@ -69,7 +69,10 @@
               <span class="price">
                 <span class="yuan">¥</span>{{ product.price }}
               </span>
-              <span class="buy-btn">立即购买</span>
+              <div class="action-btns">
+                <span class="cart-btn-small" @click="addToCartFromList(product, $event)">🛒</span>
+                <span class="buy-btn" @click.stop="openOrderDialog(product)">购买</span>
+              </div>
             </div>
           </div>
         </div>
@@ -79,32 +82,7 @@
     </div>
 
     <!-- 底部导航栏 -->
-    <div class="mobile-tabbar">
-      <div class="tab-item active" @click="router.push('/m')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🏪</span>
-        </div>
-        <span>商城</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/orders')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">📋</span>
-        </div>
-        <span>订单</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/addresses')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🚚</span>
-        </div>
-        <span>配送</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/profile')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">👤</span>
-        </div>
-        <span>我的</span>
-      </div>
-    </div>
+    <MobileTabbar />
 
     <!-- 下单抽屉 -->
     <el-drawer
@@ -182,7 +160,14 @@
           <div class="section-title">购买数量</div>
           <div class="quantity-selector">
             <span class="qty-btn" @click="orderForm.quantity > 1 && orderForm.quantity--">-</span>
-            <span class="qty-value">{{ orderForm.quantity }}</span>
+            <input
+              type="number"
+              class="qty-input"
+              v-model="orderForm.quantity"
+              @change="validateOrderQuantity"
+              min="1"
+              max="99"
+            />
             <span class="qty-btn" @click="orderForm.quantity < 99 && orderForm.quantity++">+</span>
           </div>
         </div>
@@ -199,9 +184,14 @@
             <span class="label">实付：</span>
             <span class="price">¥{{ (selectedProduct.price * orderForm.quantity).toFixed(2) }}</span>
           </div>
-          <el-button type="primary" size="large" :loading="submitting" @click="submitOrder" class="submit-btn">
-            提交订单
-          </el-button>
+          <div class="button-group">
+            <el-button size="large" @click="addToCart" class="cart-btn">
+              加入购物车
+            </el-button>
+            <el-button type="primary" size="large" :loading="submitting" @click="submitOrder" class="submit-btn">
+              提交订单
+            </el-button>
+          </div>
         </div>
       </div>
     </el-drawer>
@@ -213,10 +203,13 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
+import { useCartStore } from '../stores/cart'
 import api from '../api'
+import MobileTabbar from '../components/MobileTabbar.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const cartStore = useCartStore()
 
 const loading = ref(false)
 const products = ref([])
@@ -235,6 +228,16 @@ const orderForm = reactive({
   remark: '',
   quantity: 1
 })
+
+// 验证订单数量
+const validateOrderQuantity = () => {
+  let value = parseInt(orderForm.quantity)
+  if (isNaN(value) || value < 1) {
+    orderForm.quantity = 1
+  } else if (value > 99) {
+    orderForm.quantity = 99
+  }
+}
 
 const categoryIcons = {
   '情侣': '💕',
@@ -284,7 +287,7 @@ const fetchProducts = async () => {
         keyword: searchKeyword.value
       }
     })
-    products.value = res.data.records
+    products.value = res.records
   } catch (error) {
     ElMessage.error('获取商品失败')
   } finally {
@@ -295,7 +298,7 @@ const fetchProducts = async () => {
 const fetchCategories = async () => {
   try {
     const res = await api.get('/categories')
-    categories.value = res.data
+    categories.value = res
   } catch (error) {
     console.error('获取分类失败:', error)
   }
@@ -304,7 +307,7 @@ const fetchCategories = async () => {
 const fetchAddresses = async () => {
   try {
     const res = await api.get('/addresses')
-    addresses.value = res.data
+    addresses.value = res
     if (addresses.value.length > 0) {
       const defaultAddr = addresses.value.find(a => a.isDefault === 1)
       orderForm.addressId = defaultAddr?.id || addresses.value[0].id
@@ -327,7 +330,7 @@ const openOrderDialog = async (product) => {
 
   try {
     const res = await api.get(`/products/${product.id}`)
-    selectedProduct.value = res.data
+    selectedProduct.value = res
     orderForm.specs = {}
     orderForm.remark = ''
 
@@ -369,6 +372,21 @@ const submitOrder = async () => {
   } finally {
     submitting.value = false
   }
+}
+
+// 加入购物车
+const addToCart = () => {
+  if (!selectedProduct.value) return
+  cartStore.addItem(selectedProduct.value, orderForm.specs, orderForm.quantity || 1)
+  orderDrawerVisible.value = false
+  ElMessage.success('已加入购物车')
+}
+
+// 加入购物车（从商品列表）
+const addToCartFromList = (product, event) => {
+  event.stopPropagation()
+  cartStore.addItem(product, {}, 1)
+  ElMessage.success('已加入购物车')
 }
 
 onMounted(() => {
@@ -605,44 +623,15 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* 底部导航栏 */
-.mobile-tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
+.action-btns {
   display: flex;
-  justify-content: space-around;
-  padding: 8px 0 12px;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
-  z-index: 1000;
+  align-items: center;
+  gap: 8px;
 }
 
-.tab-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #999;
+.cart-btn-small {
+  font-size: 16px;
   cursor: pointer;
-}
-
-.tab-item.active {
-  color: #667eea;
-}
-
-.tab-icon-wrap {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tab-icon {
-  font-size: 22px;
 }
 
 /* 下单抽屉 */
@@ -882,6 +871,20 @@ onMounted(() => {
   font-weight: 600;
 }
 
+.qty-input {
+  flex: 1;
+  width: 40px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+}
+
+.qty-input:focus {
+  outline: none;
+}
+
 .remark-section {
   padding: 16px 0 20px;
 }
@@ -930,9 +933,20 @@ onMounted(() => {
 }
 
 .submit-btn {
-  padding: 14px 40px;
+  padding: 14px 30px;
   background: linear-gradient(135deg, #667eea, #764ba2);
   border: none;
+  border-radius: 24px;
+  font-size: 15px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.cart-btn {
+  padding: 14px 20px;
   border-radius: 24px;
   font-size: 15px;
 }

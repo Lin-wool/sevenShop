@@ -81,32 +81,7 @@
     </el-dialog>
 
     <!-- 底部导航栏 -->
-    <div class="mobile-tabbar">
-      <div class="tab-item" @click="router.push('/m')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🏪</span>
-        </div>
-        <span>商城</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/orders')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">📋</span>
-        </div>
-        <span>订单</span>
-      </div>
-      <div class="tab-item active">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">🚚</span>
-        </div>
-        <span>配送</span>
-      </div>
-      <div class="tab-item" @click="router.push('/m/profile')">
-        <div class="tab-icon-wrap">
-          <span class="tab-icon">👤</span>
-        </div>
-        <span>我的</span>
-      </div>
-    </div>
+    <MobileTabbar />
   </div>
 </template>
 
@@ -115,6 +90,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
+import MobileTabbar from '../components/MobileTabbar.vue'
 
 const router = useRouter()
 
@@ -145,7 +121,7 @@ const fetchAddresses = async () => {
   loading.value = true
   try {
     const res = await api.get('/addresses')
-    addresses.value = res.data
+    addresses.value = res
   } catch (error) {
     ElMessage.error('获取地址失败')
   } finally {
@@ -330,45 +306,5 @@ onMounted(() => {
 
 .bottom-space {
   height: 70px;
-}
-
-/* 底部导航栏 */
-.mobile-tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0 12px;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
-  z-index: 1000;
-}
-
-.tab-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #999;
-  cursor: pointer;
-}
-
-.tab-item.active {
-  color: #667eea;
-}
-
-.tab-icon-wrap {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tab-icon {
-  font-size: 22px;
 }
 </style>

@@ -210,7 +210,7 @@ const handleCheckout = async () => {
   // 获取用户地址
   try {
     const res = await api.get('/addresses')
-    addresses.value = res.data || []
+    addresses.value = res || []
     if (addresses.value.length === 0) {
       ElMessage.warning('请先添加收货地址')
       router.push('/addresses')
