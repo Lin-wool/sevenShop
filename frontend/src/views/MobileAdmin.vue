@@ -302,6 +302,51 @@
         <el-form-item label="商品描述" prop="description">
           <el-input v-model="productForm.description" type="textarea" :rows="3" placeholder="请输入商品描述" />
         </el-form-item>
+
+        <!-- 商品规格配置 -->
+        <el-divider content-position="left">商品规格</el-divider>
+
+        <!-- 预设模板选择 -->
+        <el-form-item label="预设模板">
+          <el-select
+            v-model="selectedTemplate"
+            placeholder="选择预设模板（可选）"
+            clearable
+            style="width: 100%"
+            @change="applyTemplate"
+          >
+            <el-option
+              v-for="template in specTemplates"
+              :key="template.name"
+              :label="template.name"
+              :value="template.name"
+            />
+          </el-select>
+        </el-form-item>
+
+        <!-- 规格列表 -->
+        <div v-for="(spec, index) in productForm.specs" :key="index" class="spec-item-mobile">
+          <el-form-item :label="'规格' + (index + 1)">
+            <div class="spec-row">
+              <el-input
+                v-model="spec.specName"
+                placeholder="规格名称（如：甜度）"
+                style="flex: 1; margin-right: 8px;"
+              />
+              <el-input
+                v-model="spec.specValuesText"
+                placeholder="用逗号分隔"
+                style="flex: 1; margin-right: 8px;"
+                @blur="parseSpecValues(spec)"
+              />
+              <el-button type="danger" size="small" @click="removeSpec(index)">删</el-button>
+            </div>
+          </el-form-item>
+        </div>
+
+        <el-button type="primary" link @click="addSpec" style="margin-bottom: 15px;">
+          + 添加规格
+        </el-button>
       </el-form>
 
       <template #footer>
@@ -477,6 +522,9 @@ const specDialogVisible = ref(false)
 const editingSpec = ref(null)
 const specSubmitting = ref(false)
 
+// 商品规格相关
+const selectedTemplate = ref('')
+
 const specForm = reactive({
   name: '',
   specName: '',
@@ -489,7 +537,8 @@ const productForm = reactive({
   categoryId: null,
   price: 0,
   imageUrl: '',
-  description: ''
+  description: '',
+  specs: []
 })
 
 const productRules = {
@@ -593,7 +642,7 @@ const fetchStats = async () => {
 const fetchSpecTemplates = async () => {
   specLoading.value = true
   try {
-    const res = await api.get('/spec-templates/all')
+    const res = await api.get('/spec-templates')
     specTemplates.value = res || []
   } catch (error) {
     console.error('获取规格模板失败:', error)
@@ -696,35 +745,102 @@ const handleOrder = async (orderId) => {
   }
 }
 
-const openProductDialog = (product = null) => {
+const openProductDialog = async (product = null) => {
   editingProduct.value = product
+  // 先获取规格模板列表
+  await fetchSpecTemplates()
+
   if (product) {
     productForm.name = product.name
     productForm.categoryId = product.categoryId
     productForm.price = product.price
     productForm.imageUrl = product.imageUrl || ''
     productForm.description = product.description || ''
+
+    // 获取商品规格
+    try {
+      const res = await api.get(`/products/${product.id}`)
+      productForm.specs = (res.specs || []).map(s => ({
+        specName: s.specName,
+        specValues: s.specValues,
+        specValuesText: s.specValues?.join(',') || ''
+      }))
+    } catch (error) {
+      productForm.specs = []
+    }
   } else {
     productForm.name = ''
     productForm.categoryId = null
     productForm.price = 0
     productForm.imageUrl = ''
     productForm.description = ''
+    productForm.specs = []
   }
+  selectedTemplate.value = ''
   productDialogVisible.value = true
+}
+
+// 应用预设模板
+const applyTemplate = (templateName) => {
+  if (!templateName) {
+    selectedTemplate.value = ''
+    return
+  }
+
+  const template = specTemplates.value.find(t => t.name === templateName)
+  if (template && template.specs) {
+    productForm.specs = template.specs.map(s => ({
+      specName: s.specName,
+      specValues: s.specValues.split(',').map(v => v.trim()),
+      specValuesText: s.specValues
+    }))
+  }
+}
+
+const addSpec = () => {
+  productForm.specs.push({
+    specName: '',
+    specValues: [],
+    specValuesText: ''
+  })
+}
+
+const removeSpec = (index) => {
+  productForm.specs.splice(index, 1)
+}
+
+const parseSpecValues = (spec) => {
+  spec.specValues = spec.specValuesText.split(',').map(v => v.trim()).filter(v => v)
 }
 
 const submitProduct = async () => {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
+  // 处理规格数据
+  const specs = productForm.specs
+    .filter(s => s.specName && s.specValues?.length > 0)
+    .map(s => ({
+      specName: s.specName,
+      specValues: s.specValues
+    }))
+
+  const data = {
+    name: productForm.name,
+    categoryId: productForm.categoryId,
+    price: productForm.price,
+    imageUrl: productForm.imageUrl,
+    description: productForm.description,
+    specs
+  }
+
   submitting.value = true
   try {
     if (editingProduct.value) {
-      await api.put(`/products/${editingProduct.value.id}`, productForm)
+      await api.put(`/products/${editingProduct.value.id}`, data)
       ElMessage.success('更新成功')
     } else {
-      await api.post('/products', productForm)
+      await api.post('/products', data)
       ElMessage.success('添加成功')
     }
     productDialogVisible.value = false
@@ -1180,5 +1296,21 @@ watch(currentTab, (newTab) => {
 
 .bottom-space {
   height: 70px;
+}
+
+/* 移动端商品规格样式 */
+.spec-item-mobile {
+  margin-bottom: 0;
+}
+
+.spec-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.el-divider__text) {
+  font-size: 14px;
+  font-weight: bold;
 }
 </style>
