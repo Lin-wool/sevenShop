@@ -347,7 +347,7 @@
             @change="applyTemplate"
           >
             <el-option
-              v-for="template in specTemplates"
+              v-for="template in groupedSpecTemplates"
               :key="template.name"
               :label="template.name"
               :value="template.name"
@@ -874,7 +874,7 @@ const applyTemplate = (templateName) => {
     return
   }
 
-  const template = specTemplates.value.find(t => t.name === templateName)
+  const template = groupedSpecTemplates.value.find(t => t.name === templateName)
   if (template && template.specs) {
     productForm.specs = template.specs.map(s => ({
       specName: s.specName,
