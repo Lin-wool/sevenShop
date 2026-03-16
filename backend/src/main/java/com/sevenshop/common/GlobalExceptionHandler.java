@@ -26,8 +26,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e, HttpServletRequest request) {
         log.error("【业务异常】请求地址: {}, 异常信息: {}",
                 request.getRequestURI(), e.getMessage());
+        // 未登录异常(401)返回HTTP 401状态码，其他业务异常返回HTTP 400
+        HttpStatus status = e.getCode() == 401 ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST;
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(status)
                 .body(ApiResponse.error(e.getCode(), e.getMessage()));
     }
 
