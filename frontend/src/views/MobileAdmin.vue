@@ -182,48 +182,79 @@
     <div class="spec-section" v-if="currentTab === 'specs'">
       <div class="section-header">
         <span class="section-title">规格模板</span>
-        <el-button type="primary" size="small" round @click="openSpecDialog()">
-          + 添加规格
+        <el-button type="primary" size="small" round @click="openTemplateDialog()">
+          + 添加模板
         </el-button>
       </div>
       <div class="spec-list" v-loading="specLoading">
-        <div v-for="spec in specTemplates" :key="spec.id" class="spec-item">
-          <div class="spec-info">
-            <div class="spec-name">{{ spec.name }}</div>
-            <div class="spec-detail">{{ spec.specName }}: {{ spec.specValues }}</div>
-          </div>
-          <div class="spec-actions">
-            <el-button type="primary" size="small" round @click="openSpecDialog(spec)">编辑</el-button>
-            <el-button type="danger" size="small" round @click="deleteSpec(spec.id)">删除</el-button>
-          </div>
-        </div>
-        <el-empty v-if="!specLoading && specTemplates.length === 0" description="暂无规格模板" />
+        <el-collapse v-model="activeSpecCollapse">
+          <el-collapse-item
+            v-for="template in groupedSpecTemplates"
+            :key="template.name"
+            :name="template.name"
+          >
+            <template #title>
+              <div class="template-header-mobile">
+                <span class="template-name">{{ template.name }}</span>
+                <span class="template-count">({{ template.specs.length }} 个规格)</span>
+              </div>
+            </template>
+            <div class="template-specs">
+              <div v-for="spec in template.specs" :key="spec.id" class="spec-item-mobile">
+                <div class="spec-info">
+                  <span class="spec-name">{{ spec.specName }}:</span>
+                  <div class="spec-values">
+                    <el-tag
+                      v-for="(value, vIndex) in spec.specValues.split(',')"
+                      :key="vIndex"
+                      size="small"
+                      type="info"
+                    >
+                      {{ value.trim() }}
+                    </el-tag>
+                  </div>
+                </div>
+              </div>
+              <div class="template-actions-mobile">
+                <el-button type="primary" size="small" round @click="openTemplateDialog(template)">编辑</el-button>
+                <el-button type="danger" size="small" round @click="deleteTemplate(template.name)">删除</el-button>
+              </div>
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+        <el-empty v-if="!specLoading && groupedSpecTemplates.length === 0" description="暂无规格模板" />
       </div>
     </div>
 
     <!-- 规格模板编辑弹窗 -->
     <el-dialog
       v-model="specDialogVisible"
-      :title="editingSpec ? '编辑规格模板' : '添加规格模板'"
+      :title="editingSpecTemplate ? '编辑模板' : '添加模板'"
       width="90%"
     >
       <el-form :model="specForm" label-width="80px">
-        <el-form-item label="模板名称">
-          <el-input v-model="specForm.name" placeholder="如：奶茶、咖啡" />
+        <el-form-item label="模板名称" required>
+          <el-input v-model="specForm.name" placeholder="如：奶茶、咖啡、甜品" :disabled="!!editingSpecTemplate" />
         </el-form-item>
-        <el-form-item label="规格名称">
-          <el-input v-model="specForm.specName" placeholder="如：甜度、温度" />
-        </el-form-item>
-        <el-form-item label="规格值">
-          <el-input v-model="specForm.specValues" type="textarea" :rows="2" placeholder="多个值用逗号分隔" />
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-input-number v-model="specForm.sort" :min="0" :max="999" />
-        </el-form-item>
+        <el-divider content-position="left">规格列表</el-divider>
+        <div v-for="(spec, index) in specForm.specs" :key="index" class="spec-edit-item-mobile">
+          <el-row :gutter="8">
+            <el-col :span="8">
+              <el-input v-model="spec.specName" placeholder="规格名称" size="small" />
+            </el-col>
+            <el-col :span="14">
+              <el-input v-model="spec.specValues" placeholder="用逗号分隔" size="small" />
+            </el-col>
+            <el-col :span="2">
+              <el-button type="danger" link size="small" @click="removeSpecFromTemplate(index)">删除</el-button>
+            </el-col>
+          </el-row>
+        </div>
+        <el-button type="primary" link @click="addSpecToTemplate">+ 添加规格</el-button>
       </el-form>
       <template #footer>
         <el-button @click="specDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="specSubmitting" @click="submitSpec">保存</el-button>
+        <el-button type="primary" :loading="specSubmitting" @click="submitTemplate">保存</el-button>
       </template>
     </el-dialog>
 
@@ -381,7 +412,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../stores/user'
@@ -517,19 +548,39 @@ const stats = ref({
 
 // 规格模板管理
 const specLoading = ref(false)
-const specTemplates = ref([])
+const specTemplates = ref([]) // 平铺数据
 const specDialogVisible = ref(false)
-const editingSpec = ref(null)
+const editingSpecTemplate = ref(null) // 编辑的模板名称
 const specSubmitting = ref(false)
+const activeSpecCollapse = ref([]) // 展开的规格模板
+
+// 分组后的规格模板
+const groupedSpecTemplates = computed(() => {
+  const groups = {}
+  specTemplates.value.forEach(t => {
+    if (!groups[t.name]) {
+      groups[t.name] = {
+        name: t.name,
+        specs: []
+      }
+    }
+    groups[t.name].specs.push({
+      id: t.id,
+      specName: t.specName,
+      specValues: t.specValues
+    })
+  })
+  return Object.values(groups)
+})
 
 // 商品规格相关
 const selectedTemplate = ref('')
 
 const specForm = reactive({
   name: '',
-  specName: '',
-  specValues: '',
-  sort: 0
+  specs: [
+    { specName: '', specValues: '' }
+  ]
 })
 
 const productForm = reactive({
@@ -642,7 +693,7 @@ const fetchStats = async () => {
 const fetchSpecTemplates = async () => {
   specLoading.value = true
   try {
-    const res = await api.get('/spec-templates')
+    const res = await api.get('/spec-templates/all')
     specTemplates.value = res || []
   } catch (error) {
     console.error('获取规格模板失败:', error)
@@ -651,37 +702,62 @@ const fetchSpecTemplates = async () => {
   }
 }
 
-const openSpecDialog = (spec = null) => {
-  editingSpec.value = spec
-  if (spec) {
-    specForm.name = spec.name
-    specForm.specName = spec.specName
-    specForm.specValues = spec.specValues
-    specForm.sort = spec.sort
+const openTemplateDialog = (template = null) => {
+  editingSpecTemplate.value = template
+  if (template) {
+    specForm.name = template.name
+    specForm.specs = template.specs.map(s => ({
+      specName: s.specName,
+      specValues: s.specValues
+    }))
   } else {
     specForm.name = ''
-    specForm.specName = ''
-    specForm.specValues = ''
-    specForm.sort = 0
+    specForm.specs = [{ specName: '', specValues: '' }]
   }
   specDialogVisible.value = true
 }
 
-const submitSpec = async () => {
-  if (!specForm.name || !specForm.specName || !specForm.specValues) {
-    ElMessage.warning('请填写完整信息')
+const addSpecToTemplate = () => {
+  specForm.specs.push({ specName: '', specValues: '' })
+}
+
+const removeSpecFromTemplate = (index) => {
+  specForm.specs.splice(index, 1)
+}
+
+const submitTemplate = async () => {
+  if (!specForm.name.trim()) {
+    ElMessage.warning('请输入模板名称')
+    return
+  }
+
+  const validSpecs = specForm.specs.filter(s => s.specName.trim() && s.specValues.trim())
+  if (validSpecs.length === 0) {
+    ElMessage.warning('请至少添加一个规格')
     return
   }
 
   specSubmitting.value = true
   try {
-    if (editingSpec.value) {
-      await api.put(`/spec-templates/${editingSpec.value.id}`, specForm)
-      ElMessage.success('更新成功')
-    } else {
-      await api.post('/spec-templates', specForm)
-      ElMessage.success('添加成功')
+    // 如果是编辑模式，先删除原有规格，再添加新规格
+    if (editingSpecTemplate.value) {
+      const toDelete = specTemplates.value.filter(t => t.name === editingSpecTemplate.value.name)
+      for (const spec of toDelete) {
+        await api.delete(`/spec-templates/${spec.id}`)
+      }
     }
+
+    // 添加新规格
+    for (const spec of validSpecs) {
+      await api.post('/spec-templates', {
+        name: specForm.name,
+        specName: spec.specName,
+        specValues: spec.specValues,
+        sort: 0
+      })
+    }
+
+    ElMessage.success(editingSpecTemplate.value ? '更新成功' : '创建成功')
     specDialogVisible.value = false
     fetchSpecTemplates()
   } catch (error) {
@@ -691,16 +767,27 @@ const submitSpec = async () => {
   }
 }
 
-const deleteSpec = async (id) => {
+const deleteTemplate = async (name) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个规格模板吗？', '提示', { type: 'warning' })
-    await api.delete(`/spec-templates/${id}`)
+    await ElMessageBox.confirm(`确定要删除模板"${name}"及其所有规格吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    specLoading.value = true
+    const toDelete = specTemplates.value.filter(t => t.name === name)
+    for (const spec of toDelete) {
+      await api.delete(`/spec-templates/${spec.id}`)
+    }
     ElMessage.success('删除成功')
     fetchSpecTemplates()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      ElMessage.error(error.response?.data?.message || '删除失败')
     }
+  } finally {
+    specLoading.value = false
   }
 }
 
@@ -1232,6 +1319,69 @@ watch(currentTab, (newTab) => {
 .spec-actions {
   display: flex;
   gap: 8px;
+}
+
+/* 分组模板样式 */
+.template-header-mobile {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.template-header-mobile .template-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+}
+
+.template-header-mobile .template-count {
+  font-size: 12px;
+  color: #999;
+  margin-left: 8px;
+}
+
+.template-specs {
+  padding: 8px 0;
+}
+
+.spec-item-mobile {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.spec-item-mobile:last-of-type {
+  border-bottom: none;
+}
+
+.template-specs .spec-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.template-specs .spec-name {
+  font-weight: 500;
+  min-width: 50px;
+  margin-bottom: 0;
+}
+
+.template-specs .spec-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.template-actions-mobile {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.spec-edit-item-mobile {
+  margin-bottom: 8px;
 }
 
 /* 用户管理 */
