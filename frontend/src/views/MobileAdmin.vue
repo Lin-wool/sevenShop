@@ -21,6 +21,11 @@
         <span class="menu-text">商品管理</span>
         <span class="menu-arrow">›</span>
       </div>
+      <div class="menu-item" @click="currentTab = 'categories'">
+        <span class="menu-icon">📁</span>
+        <span class="menu-text">分类管理</span>
+        <span class="menu-arrow">›</span>
+      </div>
       <div class="menu-item" @click="currentTab = 'orders'">
         <span class="menu-icon">📦</span>
         <span class="menu-text">订单管理</span>
@@ -81,6 +86,29 @@
           </div>
         </div>
         <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
+      </div>
+    </div>
+
+    <!-- 分类管理 -->
+    <div class="spec-section" v-if="currentTab === 'categories'">
+      <div class="section-header">
+        <span class="section-title">分类管理</span>
+        <el-button type="primary" size="small" round @click="openCategoryDialog()">
+          + 添加分类
+        </el-button>
+      </div>
+      <div class="spec-list" v-loading="categoryLoading">
+        <div v-for="cat in categoryList" :key="cat.id" class="spec-item">
+          <div class="spec-info">
+            <div class="spec-name">{{ cat.name }}</div>
+            <div class="spec-detail">排序: {{ cat.sort }}</div>
+          </div>
+          <div class="spec-actions">
+            <el-button type="primary" size="small" round @click="openCategoryDialog(cat)">编辑</el-button>
+            <el-button type="danger" size="small" round @click="deleteCategory(cat.id)">删除</el-button>
+          </div>
+        </div>
+        <el-empty v-if="!categoryLoading && categoryList.length === 0" description="暂无分类" />
       </div>
     </div>
 
@@ -284,6 +312,24 @@
       </template>
     </el-dialog>
 
+    <!-- 分类管理弹窗 -->
+    <el-dialog v-model="categoryDialogVisible" :title="editingCategory ? '编辑分类' : '新增分类'" width="90%">
+      <el-form :model="categoryForm" label-width="80px">
+        <el-form-item label="分类名称">
+          <el-input v-model="categoryForm.name" placeholder="请输入分类名称" />
+        </el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="categoryForm.sort" :min="0" :max="999" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="categoryDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="categorySubmitting" @click="submitCategory">
+          保存
+        </el-button>
+      </template>
+    </el-dialog>
+
     <!-- 底部导航栏 -->
     <MobileTabbar />
   </div>
@@ -322,6 +368,84 @@ const goToHandledOrders = () => {
 // 跳转到用户管理
 const goToUsers = () => {
   currentTab.value = 'users'
+}
+
+// 分类管理
+const categoryList = ref([])
+const categoryLoading = ref(false)
+const categoryDialogVisible = ref(false)
+const editingCategory = ref(null)
+const categorySubmitting = ref(false)
+
+const categoryForm = reactive({
+  name: '',
+  sort: 0
+})
+
+const fetchCategoryList = async () => {
+  categoryLoading.value = true
+  try {
+    const res = await api.get('/categories')
+    categoryList.value = res || []
+  } catch (error) {
+    ElMessage.error('获取分类失败')
+  } finally {
+    categoryLoading.value = false
+  }
+}
+
+const openCategoryDialog = (cat = null) => {
+  editingCategory.value = cat ? cat.id : null
+  if (cat) {
+    categoryForm.name = cat.name
+    categoryForm.sort = cat.sort || 0
+  } else {
+    categoryForm.name = ''
+    categoryForm.sort = 0
+  }
+  categoryDialogVisible.value = true
+}
+
+const submitCategory = async () => {
+  if (!categoryForm.name) {
+    ElMessage.warning('请输入分类名称')
+    return
+  }
+  categorySubmitting.value = true
+  try {
+    if (editingCategory.value) {
+      await api.put(`/categories/${editingCategory.value}`, {
+        name: categoryForm.name,
+        sort: categoryForm.sort
+      })
+      ElMessage.success('编辑成功')
+    } else {
+      await api.post('/categories', {
+        name: categoryForm.name,
+        sort: categoryForm.sort
+      })
+      ElMessage.success('添加成功')
+    }
+    categoryDialogVisible.value = false
+    fetchCategoryList()
+  } catch (error) {
+    ElMessage.error(editingCategory.value ? '编辑失败' : '添加失败')
+  } finally {
+    categorySubmitting.value = false
+  }
+}
+
+const deleteCategory = async (id) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该分类吗？', '提示', { type: 'warning' })
+    await api.delete(`/categories/${id}`)
+    ElMessage.success('删除成功')
+    fetchCategoryList()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 const loading = ref(false)
@@ -641,6 +765,8 @@ watch(currentTab, (newTab) => {
     fetchSpecTemplates()
   } else if (newTab === 'users') {
     fetchUsers()
+  } else if (newTab === 'categories') {
+    fetchCategoryList()
   }
 })
 </script>

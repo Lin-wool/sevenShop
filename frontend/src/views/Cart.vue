@@ -273,43 +273,67 @@ onMounted(() => {
   align-items: center;
 }
 
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.card-header .el-button {
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
 .empty-cart {
-  padding: 50px 0;
+  padding: 80px 0;
 }
 
 .product-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .product-image {
-  width: 80px;
-  height: 80px;
+  width: 88px;
+  height: 88px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  transition: transform 0.3s ease;
+}
+
+.product-image:hover {
+  transform: scale(1.05);
 }
 
 .product-name {
   font-weight: 500;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  color: var(--color-text);
 }
 
 .product-specs {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .spec-tag {
   display: inline-block;
-  margin-right: 8px;
-  padding: 2px 6px;
-  background: #f5f5f5;
-  border-radius: 4px;
+  margin-right: 6px;
+  padding: 3px 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-light);
 }
 
 .price {
-  color: #e6a23c;
+  color: var(--color-danger);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.price::before {
+  content: '¥';
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -317,31 +341,95 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 20px;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 8px;
+  margin-top: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(to right, #fff, #f8fafc);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .selected-info {
   font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .total-price {
-  font-size: 20px;
-  color: #e6a23c;
-  font-weight: bold;
+  font-size: 24px;
+  color: var(--color-danger);
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.cart-footer .el-button--primary {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+}
+
+.cart-footer .el-button--danger {
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
 }
 
 .checkout-items {
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
 }
 
 .checkout-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.checkout-item .price {
+  font-size: 14px;
+}
+
+/* 表格样式优化 */
+:deep(.el-table) {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+:deep(.el-table th) {
+  background: var(--color-bg) !important;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+:deep(.el-table td) {
+  padding: 16px 0;
+}
+
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .card-header div {
+    display: flex;
+    gap: 8px;
+  }
+
+  .cart-footer {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .selected-info {
+    font-size: 14px;
+  }
 }
 </style>

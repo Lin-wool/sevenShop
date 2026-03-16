@@ -399,13 +399,13 @@ onMounted(() => {
 <style scoped>
 .mobile-page {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: var(--color-bg);
   padding-bottom: 70px;
 }
 
 /* 顶部区域 */
 .mobile-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #6366F1 100%);
   padding: 16px 16px 20px;
 }
 
@@ -440,7 +440,7 @@ onMounted(() => {
 
 .hello {
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 0.9;
   color: white;
 }
 
@@ -472,15 +472,15 @@ onMounted(() => {
   background: transparent;
   font-size: 14px;
   outline: none;
-  color: #333;
+  color: var(--color-text);
 }
 
 .search-bar input::placeholder {
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .search-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-primary), #6366F1);
   color: white;
   padding: 6px 14px;
   border-radius: 16px;
@@ -495,7 +495,7 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .category-scroll {
@@ -520,11 +520,11 @@ onMounted(() => {
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  background: #f8f9fa;
+  background: var(--color-bg);
 }
 
 .category-item.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-primary), #6366F1);
   color: white;
 }
 
@@ -549,9 +549,9 @@ onMounted(() => {
 
 .product-item {
   background: white;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-card);
   transition: all 0.2s;
 }
 
@@ -571,17 +571,22 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.product-item:hover .product-image img {
+  transform: scale(1.05);
 }
 
 .product-tag {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(102, 126, 234, 0.9);
+  background: var(--color-primary);
   color: white;
   font-size: 10px;
-  padding: 4px 8px;
-  border-radius: 10px;
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
 .product-info {
@@ -591,7 +596,7 @@ onMounted(() => {
 .product-info h3 {
   margin: 0 0 10px;
   font-size: 14px;
-  color: #333;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -607,7 +612,7 @@ onMounted(() => {
 .price-row .price {
   font-size: 18px;
   font-weight: bold;
-  color: #ff4d4f;
+  color: var(--color-danger);
 }
 
 .price-row .yuan {
@@ -616,10 +621,10 @@ onMounted(() => {
 
 .buy-btn {
   font-size: 11px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-primary), #6366F1);
   color: white;
-  padding: 6px 12px;
-  border-radius: 12px;
+  padding: 6px 14px;
+  border-radius: 14px;
   white-space: nowrap;
 }
 
@@ -630,8 +635,9 @@ onMounted(() => {
 }
 
 .cart-btn-small {
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
+  padding: 4px;
 }
 
 /* 下单抽屉 */
@@ -642,7 +648,7 @@ onMounted(() => {
 :deep(.el-drawer__header) {
   margin-bottom: 0;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border-light);
   font-size: 16px;
   font-weight: bold;
 }
@@ -655,39 +661,39 @@ onMounted(() => {
   display: flex;
   gap: 14px;
   padding: 20px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   margin: 0 20px 20px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
 }
 
 .product-img {
   width: 90px;
   height: 90px;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .product-detail h3 {
   margin: 0 0 6px;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
 }
 
 .category-tag {
   display: inline-block;
   font-size: 11px;
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.1);
   padding: 3px 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   margin: 0 0 8px;
 }
 
 .product-detail .price {
   font-size: 22px;
   font-weight: bold;
-  color: #ff4d4f;
+  color: var(--color-danger);
 }
 
 .section-title {
@@ -696,14 +702,14 @@ onMounted(() => {
   align-items: center;
   font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   padding: 0 20px;
   margin-bottom: 14px;
 }
 
 .add-btn {
   font-size: 13px;
-  color: #667eea;
+  color: var(--color-primary);
   font-weight: normal;
 }
 
@@ -717,7 +723,7 @@ onMounted(() => {
 
 .spec-name {
   font-size: 13px;
-  color: #666;
+  color: var(--color-text-secondary);
   display: block;
   margin-bottom: 10px;
 }
@@ -730,7 +736,7 @@ onMounted(() => {
 
 .spec-value {
   padding: 8px 20px;
-  background: #f5f7fa;
+  background: var(--color-bg);
   border-radius: 20px;
   font-size: 13px;
   cursor: pointer;
@@ -739,14 +745,14 @@ onMounted(() => {
 }
 
 .spec-value.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-primary), #6366F1);
   color: white;
   border-color: transparent;
 }
 
 .address-section {
   padding: 16px 0;
-  background: #fafafa;
+  background: var(--color-bg);
 }
 
 .address-list {
@@ -762,15 +768,15 @@ onMounted(() => {
   gap: 12px;
   padding: 14px;
   background: white;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .address-item.active {
-  border-color: #667eea;
-  background: #f8f9ff;
+  border-color: var(--color-primary);
+  background: #f0f9ff;
 }
 
 .address-icon {
@@ -795,12 +801,12 @@ onMounted(() => {
 }
 
 .address-header .phone {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 13px;
 }
 
 .address-header .tag {
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
   font-size: 10px;
   padding: 2px 8px;
@@ -809,13 +815,13 @@ onMounted(() => {
 
 .address-text {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .check-icon {
   width: 20px;
   height: 20px;
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -827,11 +833,11 @@ onMounted(() => {
 .no-address {
   padding: 0 20px;
   font-size: 13px;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .no-address .link {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .quantity-section {
@@ -843,9 +849,9 @@ onMounted(() => {
   align-items: center;
   margin: 0 20px;
   gap: 0;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
 }
 
 .qty-btn {
@@ -854,14 +860,16 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f7fa;
+  background: var(--color-bg);
   font-size: 20px;
   cursor: pointer;
   user-select: none;
+  transition: all 0.2s;
 }
 
 .qty-btn:active {
-  background: #e8eaf0;
+  background: var(--color-primary);
+  color: white;
 }
 
 .qty-value {
@@ -894,17 +902,17 @@ onMounted(() => {
   width: calc(100% - 40px);
   height: 70px;
   margin: 0 20px;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 12px;
   font-size: 14px;
   resize: none;
   outline: none;
-  background: #fafafa;
+  background: var(--color-bg);
 }
 
 .remark-section textarea:focus {
-  border-color: #667eea;
+  border-color: var(--color-primary);
   background: white;
 }
 
@@ -923,20 +931,20 @@ onMounted(() => {
 
 .total-price .label {
   font-size: 13px;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .total-price .price {
   font-size: 24px;
   font-weight: bold;
-  color: #ff4d4f;
+  color: var(--color-danger);
 }
 
 .submit-btn {
   padding: 14px 30px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-primary), #6366F1);
   border: none;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   font-size: 15px;
 }
 
@@ -947,12 +955,12 @@ onMounted(() => {
 
 .cart-btn {
   padding: 14px 20px;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   font-size: 15px;
 }
 
 :deep(.el-button--primary) {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--color-primary), #6366F1);
   border: none;
 }
 </style>

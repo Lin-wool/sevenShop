@@ -101,6 +101,11 @@ const routes = [
         component: () => import('../views/AdminProducts.vue')
       },
       {
+        path: 'categories',
+        name: 'AdminCategories',
+        component: () => import('../views/AdminCategories.vue')
+      },
+      {
         path: 'spec-templates',
         name: 'AdminSpecTemplates',
         component: () => import('../views/AdminSpecTemplates.vue')

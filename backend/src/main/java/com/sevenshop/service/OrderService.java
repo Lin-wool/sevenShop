@@ -18,15 +18,19 @@ import com.sevenshop.mapper.OrderItemMapper;
 import com.sevenshop.mapper.OrderMapper;
 import com.sevenshop.mapper.ProductMapper;
 import com.sevenshop.mapper.UserMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class OrderService {
 
@@ -52,6 +56,8 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Long userId, OrderRequest request) {
+        log.info("用户 {} 创建订单，商品ID: {}, 数量: {}", userId, request.getProductId(), request.getQuantity());
+
         Product product = productMapper.selectById(request.getProductId());
         if (product == null) {
             throw new RuntimeException("商品不存在");
@@ -67,8 +73,8 @@ public class OrderService {
         order.setProductId(request.getProductId());
         order.setQuantity(request.getQuantity() != null ? request.getQuantity() : 1);
 
-        // 计算总价：单价 * 数量
-        BigDecimal unitPrice = request.getPrice() != null ? request.getPrice() : product.getPrice();
+        // 计算总价：单价 * 数量（价格始终从商品表获取，防止客户端篡改）
+        BigDecimal unitPrice = product.getPrice();
         order.setPrice(unitPrice.multiply(BigDecimal.valueOf(order.getQuantity())));
         order.setTotalPrice(order.getPrice()); // 兼容：单个商品时总价等于price
 
@@ -113,6 +119,8 @@ public class OrderService {
 
     @Transactional
     public Order createBatchOrder(Long userId, BatchOrderRequest request) {
+        log.info("用户 {} 创建批量订单，商品数量: {}", userId, request.getItems() != null ? request.getItems().size() : 0);
+
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("购物车为空，无法下单");
         }
@@ -139,14 +147,23 @@ public class OrderService {
 
         orderMapper.insert(order);
 
+        // 批量查询商品信息，避免 N+1 查询
+        List<Long> productIds = request.getItems().stream()
+                .map(OrderItemRequest::getProductId)
+                .collect(Collectors.toList());
+        List<Product> products = productMapper.selectBatchIds(productIds);
+        Map<Long, Product> productMap = products.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
         // 创建订单项
         for (OrderItemRequest itemRequest : request.getItems()) {
-            Product product = productMapper.selectById(itemRequest.getProductId());
+            Product product = productMap.get(itemRequest.getProductId());
             if (product == null) {
                 throw new RuntimeException("商品不存在: " + itemRequest.getProductId());
             }
 
-            BigDecimal itemPrice = itemRequest.getPrice() != null ? itemRequest.getPrice() : product.getPrice();
+            // 价格始终从商品表获取，防止客户端篡改
+            BigDecimal itemPrice = product.getPrice();
             int quantity = itemRequest.getQuantity() != null ? itemRequest.getQuantity() : 1;
             BigDecimal itemTotal = itemPrice.multiply(BigDecimal.valueOf(quantity));
             totalPrice = totalPrice.add(itemTotal);
@@ -213,10 +230,20 @@ public class OrderService {
 
         Page<Order> orderPage = orderMapper.selectPage(pageParam, wrapper);
 
-        // 填充订单项
-        for (Order order : orderPage.getRecords()) {
-            List<OrderItem> items = orderItemMapper.selectByOrderId(order.getId());
-            order.setItems(items);
+        // 批量查询订单项，避免 N+1 查询
+        if (!orderPage.getRecords().isEmpty()) {
+            List<Long> orderIds = orderPage.getRecords().stream()
+                    .map(Order::getId)
+                    .collect(Collectors.toList());
+            List<OrderItem> allItems = orderItemMapper.selectByOrderIds(orderIds);
+
+            // 按订单ID分组
+            Map<Long, List<OrderItem>> itemsMap = allItems.stream()
+                    .collect(Collectors.groupingBy(OrderItem::getOrderId));
+
+            for (Order order : orderPage.getRecords()) {
+                order.setItems(itemsMap.getOrDefault(order.getId(), new ArrayList<>()));
+            }
         }
 
         return orderPage;
@@ -232,10 +259,20 @@ public class OrderService {
 
         Page<Order> orderPage = orderMapper.selectPage(pageParam, wrapper);
 
-        // 填充订单项
-        for (Order order : orderPage.getRecords()) {
-            List<OrderItem> items = orderItemMapper.selectByOrderId(order.getId());
-            order.setItems(items);
+        // 批量查询订单项，避免 N+1 查询
+        if (!orderPage.getRecords().isEmpty()) {
+            List<Long> orderIds = orderPage.getRecords().stream()
+                    .map(Order::getId)
+                    .collect(Collectors.toList());
+            List<OrderItem> allItems = orderItemMapper.selectByOrderIds(orderIds);
+
+            // 按订单ID分组
+            Map<Long, List<OrderItem>> itemsMap = allItems.stream()
+                    .collect(Collectors.groupingBy(OrderItem::getOrderId));
+
+            for (Order order : orderPage.getRecords()) {
+                order.setItems(itemsMap.getOrDefault(order.getId(), new ArrayList<>()));
+            }
         }
 
         return orderPage;

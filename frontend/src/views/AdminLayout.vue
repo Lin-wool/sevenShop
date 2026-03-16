@@ -19,6 +19,10 @@
             <el-icon><Goods /></el-icon>
             <span>商品管理</span>
           </el-menu-item>
+          <el-menu-item index="/admin/categories">
+            <el-icon><Folder /></el-icon>
+            <span>分类管理</span>
+          </el-menu-item>
           <el-menu-item index="/admin/spec-templates">
             <el-icon><Document /></el-icon>
             <span>规格模板</span>
@@ -57,7 +61,7 @@
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import { DataAnalysis, Goods, Document, List, House } from '@element-plus/icons-vue'
+import { DataAnalysis, Goods, Document, List, House, Folder } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -69,6 +73,7 @@ const pageTitle = computed(() => {
   const titles = {
     '/admin': '管理概览',
     '/admin/products': '商品管理',
+    '/admin/categories': '分类管理',
     '/admin/spec-templates': '规格模板',
     '/admin/orders': '订单管理'
   }

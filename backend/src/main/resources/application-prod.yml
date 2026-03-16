@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    # 生产环境使用 Railway 环境变量
+    # SPRING_DATASOURCE_URL 格式: mysql://user:pass@host:port/db
+    # 需要转换为 jdbc:mysql:// 格式
+    url: jdbc:${SPRING_DATASOURCE_URL}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver

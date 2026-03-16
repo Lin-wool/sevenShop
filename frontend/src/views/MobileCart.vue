@@ -4,7 +4,9 @@
     <div class="cart-header">
       <span class="back-btn" @click="router.push('/m')">←</span>
       <span>购物车</span>
-      <span v-if="cartItems.length > 0" class="clear-btn" @click="handleClearCart">清空</span>
+      <span v-if="cartItems.length > 0" class="clear-btn" @click="handleClearCart">
+        <el-button type="danger" size="small" round>清空购物车</el-button>
+      </span>
     </div>
 
     <div v-if="cartItems.length === 0" class="empty-cart">
@@ -51,7 +53,7 @@
           </div>
         </div>
         <div class="item-delete" @click.stop="handleRemoveItem(item.id)">
-          <span class="delete-icon">×</span>
+          <el-button type="danger" size="small" plain round>删除</el-button>
         </div>
       </div>
     </div>
@@ -309,7 +311,7 @@ onMounted(() => {
 <style scoped>
 .mobile-cart {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--color-bg);
   padding-bottom: 70px;
 }
 
@@ -317,21 +319,23 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 16px;
   background: #fff;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .back-btn {
-  font-size: 20px;
+  font-size: 22px;
   cursor: pointer;
-  padding: 5px 10px;
-  margin-left: -10px;
+  padding: 6px 12px;
+  margin-left: -12px;
+  color: var(--color-text);
 }
 
 .clear-btn {
-  color: #e6a23c;
+  color: var(--color-danger);
   font-size: 14px;
 }
 
@@ -344,37 +348,42 @@ onMounted(() => {
 }
 
 .empty-text {
-  color: #999;
-  margin-bottom: 20px;
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+  font-size: 15px;
 }
 
 .cart-content {
-  padding: 10px;
+  padding: 12px;
 }
 
 .cart-item {
   display: flex;
   align-items: center;
   background: #fff;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 10px;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s ease;
 }
 
 .cart-item.selected {
-  background: #fff9f0;
+  background: #f0f9ff;
+  border: 1px solid var(--color-primary-light);
 }
 
 .item-checkbox {
-  margin-right: 10px;
+  margin-right: 12px;
 }
 
 .item-image {
-  width: 80px;
-  height: 80px;
+  width: 88px;
+  height: 88px;
   object-fit: cover;
-  border-radius: 8px;
-  margin-right: 10px;
+  border-radius: var(--radius-md);
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .item-info {
@@ -383,9 +392,10 @@ onMounted(() => {
 }
 
 .item-name {
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -393,8 +403,12 @@ onMounted(() => {
 
 .item-specs {
   font-size: 12px;
-  color: #999;
-  margin-bottom: 8px;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+  background: var(--color-bg);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
 }
 
 .item-bottom {
@@ -404,45 +418,63 @@ onMounted(() => {
 }
 
 .item-price {
-  color: #e6a23c;
+  color: var(--color-danger);
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.item-price::before {
+  content: '¥';
+  font-size: 13px;
   font-weight: 500;
 }
 
 .quantity-control {
   display: flex;
   align-items: center;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 2px;
 }
 
 .qty-btn {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  border-radius: 4px;
-  font-size: 16px;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 18px;
   cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.qty-btn:active {
+  background: var(--color-primary);
+  color: #fff;
 }
 
 .qty-input {
-  width: 36px;
-  height: 24px;
+  width: 40px;
+  height: 28px;
   text-align: center;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 500;
   margin: 0 4px;
-  padding: 0 4px;
 }
 
 .qty-input:focus {
   outline: none;
-  border-color: #e6a23c;
+  background: #fff;
 }
 
 .item-delete {
-  padding: 10px;
+  padding: 8px;
 }
 
 .delete-icon {
@@ -457,58 +489,67 @@ onMounted(() => {
   right: 0;
   display: flex;
   align-items: center;
-  height: 50px;
+  height: 60px;
   background: #fff;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  z-index: 100;
 }
 
 .footer-left {
   display: flex;
   align-items: center;
-  padding: 0 15px;
+  padding: 0 16px;
 }
 
 .footer-left span {
   margin-left: 8px;
   font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .footer-center {
   flex: 1;
   text-align: center;
   font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .total-price {
-  color: #e6a23c;
-  font-weight: bold;
-  font-size: 16px;
+  color: var(--color-danger);
+  font-weight: 700;
+  font-size: 20px;
 }
 
 .footer-right {
-  width: 100px;
+  width: 110px;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e6a23c;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .footer-right.disabled {
-  background: #ccc;
+  background: #cbd5e1;
 }
 
 .checkout-items {
-  max-height: 150px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
 .checkout-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.checkout-item .price {
+  color: var(--color-danger);
+  font-weight: 600;
 }
 </style>

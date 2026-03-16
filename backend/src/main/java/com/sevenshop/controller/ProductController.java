@@ -7,6 +7,7 @@ import com.sevenshop.dto.ProductRequest;
 import com.sevenshop.entity.Product;
 import com.sevenshop.entity.ProductSpec;
 import com.sevenshop.entity.Category;
+import com.sevenshop.mapper.CategoryMapper;
 import com.sevenshop.service.ProductService;
 import com.sevenshop.service.CategoryService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -29,6 +31,9 @@ public class ProductController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Product>> createProduct(@RequestBody ProductRequest request, HttpServletRequest httpRequest) {
@@ -106,6 +111,21 @@ public class ProductController {
             @RequestParam(required = false) String keyword) {
         Page<Product> productPage = productService.getProductList(page, size, categoryId, keyword);
 
+        // 批量查询分类信息，避免 N+1 查询
+        Map<Long, String> categoryNameMap = new HashMap<>();
+        if (!productPage.getRecords().isEmpty()) {
+            List<Long> categoryIds = productPage.getRecords().stream()
+                    .map(Product::getCategoryId)
+                    .filter(id -> id != null)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!categoryIds.isEmpty()) {
+                List<Category> categories = categoryMapper.selectBatchIds(categoryIds);
+                categoryNameMap = categories.stream()
+                        .collect(Collectors.toMap(Category::getId, Category::getName));
+            }
+        }
+
         List<Map<String, Object>> records = new ArrayList<>();
         for (Product product : productPage.getRecords()) {
             Map<String, Object> productMap = new HashMap<>();
@@ -117,12 +137,9 @@ public class ProductController {
             productMap.put("status", product.getStatus());
             productMap.put("createdAt", product.getCreatedAt());
 
-            // 获取分类名称
+            // 使用批量查询的分类信息
             if (product.getCategoryId() != null) {
-                Category category = categoryService.getCategoryById(product.getCategoryId());
-                if (category != null) {
-                    productMap.put("categoryName", category.getName());
-                }
+                productMap.put("categoryName", categoryNameMap.getOrDefault(product.getCategoryId(), ""));
             }
 
             records.add(productMap);

@@ -98,45 +98,77 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #6366F1 100%);
+  padding: 20px;
 }
 
 .login-card {
   background: white;
   padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  width: 400px;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
   text-align: center;
 }
 
 .title {
-  font-size: 28px;
-  color: #ff6b6b;
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #6366F1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 8px;
 }
 
 .subtitle {
-  color: #999;
+  color: var(--color-text-secondary);
   margin-bottom: 32px;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .login-form {
   margin-top: 24px;
 }
 
+.login-form :deep(.el-input__wrapper) {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+}
+
+.login-form :deep(.el-input__inner) {
+  height: 40px;
+}
+
 .login-btn {
   width: 100%;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  height: 48px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #6366F1 100%);
   border: none;
+  border-radius: var(--radius-lg);
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .login-btn:hover {
-  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
 }
 
 .links {
-  margin-top: 16px;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 24px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
 }
 </style>

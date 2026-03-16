@@ -4,7 +4,22 @@
       "Bash(git push:*)",
       "Bash(openspec-cn list:*)",
       "Bash(mvn -f backend/pom.xml clean package -DskipTests)",
-      "Bash(./backend/mvnw.cmd -f backend/pom.xml clean package -DskipTests)"
+      "Bash(./backend/mvnw.cmd -f backend/pom.xml clean package -DskipTests)",
+      "Bash(./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local -q)",
+      "Bash(cmd //c \"mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local\")",
+      "Bash(./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local)",
+      "Bash(F:/workspace/sevenShop/backend/mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local)",
+      "Bash(cmd /c \"F:\\\\workspace\\\\sevenShop\\\\backend\\\\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local\")",
+      "Bash(cmd /c \"cd /d F:\\\\workspace\\\\sevenShop\\\\backend && mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local\")",
+      "Bash(cmd /c \"cd /d F:\\\\workspace\\\\sevenShop\\\\backend && mvnw.cmd compile -q\")",
+      "Bash(powershell -Command \"cd F:\\\\workspace\\\\sevenShop\\\\backend; .\\\\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local\")",
+      "Bash(powershell -Command \"cd F:\\\\workspace\\\\sevenShop\\\\backend; Get-Content src/main/resources/application-local.yml\")",
+      "Bash(powershell -Command \"cd F:\\\\workspace\\\\sevenShop\\\\backend; Get-Content src/main/resources/application-prod.yml\")",
+      "Bash(powershell -Command \"cd F:\\\\workspace\\\\sevenShop\\\\backend; Get-Content src/main/resources/application.yml\")",
+      "Bash(powershell -Command \"cd F:\\\\workspace\\\\sevenShop\\\\backend; .\\\\mvnw.cmd compile -q\")",
+      "Bash(powershell -Command \"mysql --version\")",
+      "Bash(powershell -Command \"docker ps -a\")",
+      "Bash(powershell -Command \"Get-Service | Where-Object {$_Name -like ''*mysql*'' -or $_Name -like ''*mariadb*''}\")"
     ]
   }
 }

@@ -22,7 +22,15 @@
       "Bash(cmd //c mvnw.cmd compile -q)",
       "Bash(npm run:*)",
       "Bash(curl -s http://localhost:5173)",
-      "Bash(curl -s http://localhost:8080/api/products)"
+      "Bash(curl -s http://localhost:8080/api/products)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl:*)",
+      "WebFetch(domain:alibaba.github.io)",
+      "Bash(cd:*)",
+      "Read(//c/Users/lgxwo/.claude/**)",
+      "Bash(dir \"%USERPROFILE%\\\\.claude\")",
+      "Bash(ls:*)",
+      "Bash(claude:*)"
     ]
   }
 }

@@ -7,12 +7,6 @@ server:
       force: true
 
 spring:
-  datasource:
-    # MySQL 数据库连接 - 使用 Railway 环境变量
-    url: jdbc:mysql://localhost:3306/sevenshop?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: root123
-    driver-class-name: com.mysql.cj.jdbc.Driver
   sql:
     init:
       schema-locations: classpath:schema.sql
@@ -45,3 +39,5 @@ jwt:
 
 app:
   admin-email: rainbowool@163.com
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000

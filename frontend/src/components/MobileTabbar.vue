@@ -47,10 +47,11 @@ const tabs = [
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 50px;
+  height: 58px;
   background: white;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
   z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .tab-item {
@@ -62,32 +63,37 @@ const tabs = [
   height: 100%;
   cursor: pointer;
   position: relative;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
 }
 
 .tab-item.active {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .tab-icon-wrap {
   position: relative;
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .tab-item span:last-child {
   font-size: 11px;
-  margin-top: 2px;
+  margin-top: 4px;
+  font-weight: 500;
 }
 
 .cart-badge {
   position: absolute;
-  top: -5px;
-  right: -8px;
-  background: #ff4d4f;
+  top: -4px;
+  right: -10px;
+  background: var(--color-danger);
   color: white;
   font-size: 10px;
-  padding: 2px 5px;
-  border-radius: 10px;
-  min-width: 16px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 12px;
+  min-width: 18px;
   text-align: center;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 </style>
